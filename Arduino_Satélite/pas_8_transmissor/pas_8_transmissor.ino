@@ -38,7 +38,6 @@ void loop() {
   if(enviarDatos == true){
     if (isnan(h) || isnan(t)){
       mySerial.println("Error al leer el sensor DHT11");
-      Serial.println (mensaje);//mirar
       esperandoTimeout = true;
       if (!esperandoTimeout){
         esperandoTimeout = true
