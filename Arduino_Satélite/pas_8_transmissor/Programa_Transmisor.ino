@@ -39,7 +39,7 @@ void loop() {
     if (isnan(h) || isnan(t)){
       mySerial.println("Error al leer el sensor DHT11");
       if (!esperandoTimeout){
-        esperandoTimeout = true
+        esperandoTimeout = true;
         nextTimeoutHT = millis() + interval3;
       }
     }
