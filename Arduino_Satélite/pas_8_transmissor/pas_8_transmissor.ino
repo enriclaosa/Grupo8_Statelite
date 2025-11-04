@@ -55,9 +55,9 @@ void loop() {
           nextMillis1 = millis() + interval1;
         }
         nextMillis2 = millis() + interval2;
-        }
-        
       }
+        
+    }
     if(esperandoTimeout && (millis() >= nextTimeoutHT))
       mySerial.println("Fallo");
   }
