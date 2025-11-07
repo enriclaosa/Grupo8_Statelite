@@ -15,11 +15,11 @@ i = 0
 running = False
 
 def Reanudar():    # Envia el mensaje para reanudar el envio
-    mensaje = "Reanudar"
+    mensaje = "Reanudar\n"
     mySerial.write(mensaje.encode('utf-8'))
 
 def Parar():   # Envia el mensaje para detener el envio
-    mensaje = "Parar"
+    mensaje = "Parar\n"
     mySerial.write(mensaje.encode('utf-8'))
 
 def update_plot():
