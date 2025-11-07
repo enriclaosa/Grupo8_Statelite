@@ -28,9 +28,10 @@ void setup() {
 void loop() {
   float h = dht.readHumidity();
   float t = dht.readTemperature();
-  if (Serial.available() > 0) {
-    mensaje = Serial.readStringUntil('\n');
-  }
+ if (Serial.available() > 0) {
+  mensaje = Serial.readStringUntil('\n');
+  mensaje.trim();
+ }
   if(mensaje == "Parar")
     enviarDatos = false;
   if(mensaje == "Reanudar")
