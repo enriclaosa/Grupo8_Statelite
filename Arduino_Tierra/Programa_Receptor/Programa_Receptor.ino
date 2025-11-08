@@ -30,6 +30,12 @@ void setup() {
 }
 
 void loop() {
+  if (Serial.available()) {
+    String comando = Serial.readStringUntil('\n');
+    comando.trim();
+    mySerial.println(comando);
+  }
+
   if (mySerial.available()) {
     String data = mySerial.readString(); // Leer hasta salto de línea
     Serial.println(data);
