@@ -11,7 +11,7 @@ unsigned long led_rec_off_time = 0;        // Tiempo para apagar el LED de recep
 bool led_rec_on = false;
 
 unsigned long last_message_time = 0;       // Última vez que se recibió dato
-const unsigned long timeout_interval = 5000;  // Timeout en milisegundos
+const unsigned long timeout_interval = 8000;  // Timeout en milisegundos
 
 void setup() {
   Serial.begin(9600);
@@ -34,11 +34,6 @@ void loop() {
     String data = mySerial.readString(); // Leer hasta salto de línea
     Serial.println(data);
 
-    // LED recepción datos ON y programar apagado
-    digitalWrite(led_rec, HIGH);
-    led_rec_on = true;
-    led_rec_off_time = millis() + led_on_interval;
-
     last_message_time = millis(); // Actualizar tiempo de último mensaje
 
     // Verificar palabra "Fallo" en la cadena recibida (case sensitive)
@@ -46,16 +41,20 @@ void loop() {
       digitalWrite(led_fallo_datostemp, HIGH);
     } else {
       digitalWrite(led_fallo_datostemp, LOW);
+      // LED recepción datos ON y programar apagado
+      digitalWrite(led_rec, HIGH);
+      led_rec_on = true;
+      led_rec_off_time = millis() + led_on_interval;
     }
   }
 
   // Apagar LED recepción después del intervalo
-  if (led_rec_on && millis() >= led_rec_off_time) {
+  if (led_rec_on && millis() >= led_rec_off_time && digitalRead(led_fallo_datostemp) == LOW) {
     digitalWrite(led_rec, LOW);
     led_rec_on = false;
   }
 
-  // Controlar LED timeout: si pasaron más de 5 segundos sin datos
+  // Controlar LED timeout: si pasaron más de 8 segundos sin datos
   if (millis() - last_message_time > timeout_interval) {
     digitalWrite(led_timeout, HIGH);
   } else {
