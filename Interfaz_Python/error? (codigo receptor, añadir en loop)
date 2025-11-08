@@ -1,5 +1,0 @@
-if (Serial.available()) {
-  String comando = Serial.readStringUntil('\n'); // lee lo que llega
-  mySerial.println(comando); // lo reenvía al transmisor
-}
-
