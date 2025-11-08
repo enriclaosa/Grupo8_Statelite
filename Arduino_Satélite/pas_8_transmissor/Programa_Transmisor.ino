@@ -26,8 +26,10 @@ void setup() {
 }
 
 void loop() {
-  if (Serial.available() > 0) {
-    mensaje = Serial.readStringUntil('\n');
+  
+if (mySerial.available() > 0) {
+    mensaje = mySerial.readStringUntil('\n');
+    Serial.println(mensaje);
     mensaje.trim();
   }
   if(mensaje == "Parar")
@@ -37,8 +39,7 @@ void loop() {
   if(enviarDatos == true){
     float h = dht.readHumidity();
     float t = dht.readTemperature();
-    
-if (millis() >= nextMillis2){
+    if (millis() >= nextMillis2){
       if (isnan(h) || isnan(t)){
         if (!esperandoTimeout){
           esperandoTimeout = true;
