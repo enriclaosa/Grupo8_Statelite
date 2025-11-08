@@ -26,40 +26,41 @@ void setup() {
 }
 
 void loop() {
-  float h = dht.readHumidity();
-  float t = dht.readTemperature();
- if (Serial.available() > 0) {
-  mensaje = Serial.readStringUntil('\n');
-  mensaje.trim();
- }
+  if (Serial.available() > 0) {
+    mensaje = Serial.readStringUntil('\n');
+    mensaje.trim();
+  }
   if(mensaje == "Parar")
     enviarDatos = false;
   if(mensaje == "Reanudar")
     enviarDatos = true;
   if(enviarDatos == true){
-    if (isnan(h) || isnan(t)){
-      mySerial.println("Error al leer el sensor DHT11");
-      if (!esperandoTimeout){
-        esperandoTimeout = true;
-        nextTimeoutHT = millis() + interval3;
+    float h = dht.readHumidity();
+    float t = dht.readTemperature();
+    
+if (millis() >= nextMillis2){
+      if (isnan(h) || isnan(t)){
+        if (!esperandoTimeout){
+          esperandoTimeout = true;
+          nextTimeoutHT = millis() + interval3;
+        }
       }
-    }
-    else {
-      if (millis() >= nextMillis2){
+      else {
         esperandoTimeout = false;
         digitalWrite(LedVerd, HIGH);
         mySerial.print(h);
         mySerial.print(" ");
         mySerial.println(t);
-        if (millis() >= nextMillis1){
-          digitalWrite(LedVerd, LOW);
-          nextMillis1 = millis() + interval1;
-        }
-        nextMillis2 = millis() + interval2;
+        nextMillis1 = millis() + interval1; 
       }
-        
+      nextMillis2 = millis() + interval2;
     }
-    if(esperandoTimeout && (millis() >= nextTimeoutHT))
+    if (millis() >= nextMillis1){
+      digitalWrite(LedVerd, LOW);
+    }
+    if(esperandoTimeout && (millis() >= nextTimeoutHT)){
       mySerial.println("Fallo");
+      esperandoTimeout = false;
+    }
   }
 }
