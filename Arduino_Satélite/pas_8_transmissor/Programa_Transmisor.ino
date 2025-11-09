@@ -25,44 +25,42 @@ void setup() {
   nextTimeoutHT = millis() + intervalTimeoutHT;
 }
 
-void loop() {
-  
+void loop() {  
 if (mySerial.available() > 0) {
-    mensaje = mySerial.readStringUntil('\n');
-    Serial.println(mensaje);
-    mensaje.trim();
-  }
-  if(mensaje == "Parar")
-    enviarDatos = false;
-  if(mensaje == "Reanudar")
-    enviarDatos = true;
-  if(enviarDatos == true){
-    float h = dht.readHumidity();
-    float t = dht.readTemperature();
-    if (millis() >= nextHT){
-      if (isnan(h) || isnan(t)){
-        if (!esperandoTimeout){
-          esperandoTimeout = true;
-          nextTimeoutHT = millis() + intervalTimeoutHT;
-        }
+  mensaje = mySerial.readStringUntil('\n');
+  Serial.println(mensaje);
+  mensaje.trim();
+}
+if(mensaje == "Parar")
+  enviarDatos = false;
+if(mensaje == "Reanudar")
+  enviarDatos = true;
+if(enviarDatos == true){
+  float h = dht.readHumidity();
+  float t = dht.readTemperature();
+  if (millis() >= nextHT){
+    if (isnan(h) || isnan(t)){
+      if (!esperandoTimeout){
+        esperandoTimeout = true;
+        nextTimeoutHT = millis() + intervalTimeoutHT;
       }
-      else {
-        esperandoTimeout = false;
-        digitalWrite(LedVerd, HIGH);
-        mySerial.print("1 ");
-        mySerial.print(h);
-        mySerial.print(" ");
-        mySerial.println(t);
-        nextLedRojo = millis() + intervalLedRojo;
-      }
-      nextHT = millis() + intervalHT;
     }
-    if (millis() >= nextLedRojo){
-      digitalWrite(LedVerd, LOW);
-    }
-    if(esperandoTimeout && (millis() >= nextTimeoutHT)){
-      mySerial.println("Fallo");
+    else {
       esperandoTimeout = false;
+      digitalWrite(LedVerd, HIGH);
+      mySerial.print("1 ");
+      mySerial.print(h);
+      mySerial.print(" ");
+      mySerial.println(t);
+      nextLedRojo = millis() + intervalLedRojo;
     }
+    nextHT = millis() + intervalHT;
   }
+  if (millis() >= nextLedRojo)
+    digitalWrite(LedVerd, LOW);
+  if(esperandoTimeout && (millis() >= nextTimeoutHT)){
+    mySerial.println("Fallo");
+    esperandoTimeout = false;
+  }
+}
 }
