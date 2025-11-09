@@ -4,25 +4,25 @@ from tkinter import *
 from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg
 import threading
 
-device = 'COM3'
+device = 'COM3'  # Cambiar por el puerto correspondiente
 mySerial = serial.Serial(device, 9600, timeout=1)
 
 
 # Variables globales para guardar datos
 temperaturas = []
+medias = []
 eje_x = []
 i = 0
 running = False
-
-# Estado para controlar que tipo de valor introducir
-accion_actual = None  # Puede ser "periodo" o "orientacion"
+limite_alarma = 25.0  # Límite de temperatura para la alarma
+accion_actual = None
 
 def Reanudar():    # Envia el mensaje para reanudar el envio
-    mensaje = "Reanudar\n"
+    mensaje = "Reanudar"
     mySerial.write(mensaje.encode('utf-8'))
 
 def Parar():   # Envia el mensaje para detener el envio
-    mensaje = "Parar\n"
+    mensaje = "Parar"
     mySerial.write(mensaje.encode('utf-8'))
 
 def update_plot():
@@ -32,21 +32,37 @@ def update_plot():
             linea = mySerial.readline().decode('utf-8').rstrip()
             print(linea)
             temp = linea.split(" ")
-            if len(temp) > 1:
+            try:
+                  codigo = int(temp[0])
+            except ValueError:
+                  continue  # Ignorar líneas mal formateadas
+            if codigo == 1 and len(temp) >= 3:  # Temperatura y humedad
                 try:
-                    temperatura = float(temp[1])
+                    humedad = float(temp[1])
+                    temperatura = float(temp[2])
                     temperaturas.append(temperatura)
                     eje_x.append(i)
                     i += 1
+                    
+                    ultimos_10 = temperaturas[-10:] # Últimas 10 temperaturas
+                    media = sum(ultimos_10) / len(ultimos_10)
+                    medias.append(media)
+
+                    # detección de alarma
+                    if len(medias) >= 3:
+                        if medias[-1] > limite_alarma and medias[-2] > limite_alarma and medias[-3] > limite_alarma:
+                            print("Tres medias consecutivas por encima del límite!")
                 except ValueError:
                     # Si no se puede convertir, ignorar la línea
                     pass
+
 
         ax.clear()
         ax.set_xlim(0, max(100, i))
         ax.set_ylim(20, 30)  # Limites de temperatura
         ax.plot(eje_x, temperaturas, label='Temperatura')
-        ax.set_title('Temperatura en tiempo real')
+        ax.plot(eje_x, medias, label='Media últimos 10', color='orange')
+        ax.set_title('Temperatura y media en tiempo real')
         ax.set_xlabel('Muestras')
         ax.set_ylabel('Temperatura (°C)')
         ax.legend()
@@ -59,6 +75,7 @@ def Iniciarclick():
     if not running:
         running = True
         temperaturas.clear()
+        medias.clear()
         eje_x.clear()
         i = 0
         update_plot()
