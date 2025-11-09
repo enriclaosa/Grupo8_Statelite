@@ -13,6 +13,12 @@ bool led_rec_on = false;
 unsigned long last_message_time = 0;       // Última vez que se recibió dato
 const unsigned long timeout_interval = 8000;  // Timeout en milisegundos
 
+
+float temperatura = 0; // nuevo: variables para almacenar datos
+float humedad = 0;
+int distancia = 0;
+bool falloDHT = false;
+
 void setup() {
   Serial.begin(9600);
   mySerial.begin(9600);
@@ -42,6 +48,35 @@ void loop() {
 
     last_message_time = millis(); // Actualizar tiempo de último mensaje
 
+     //NUEVO Procesar códigos
+    int fin = data.indexOf(':', 0);          
+    int codigo = data.substring(0, fin).toInt();
+    int inicio = fin + 1;
+
+    if (codigo == 1) { // Código 1: Temperatura y Humedad
+      fin = data.indexOf(':', inicio);
+      if (fin == -1) fin = data.length();
+      String tempStr = data.substring(inicio, fin);
+      String humStr = data.substring(fin + 1);
+      temperatura = tempStr.toFloat();
+      humedad = humStr.toFloat();
+      falloDHT = false;
+
+      digitalWrite(led_rec, HIGH);  // LED recepción datos on (igual que antes)
+      led_rec_on = true;
+      led_rec_off_time = millis() + led_on_interval;
+      digitalWrite(led_fallo_datostemp, LOW);
+    }
+    else if (codigo == 2) { // Código 2: Distancia
+      fin = data.indexOf(':', inicio);
+      if (fin == -1) fin = data.length();
+      distancia = data.substring(inicio, fin).toInt();
+    }
+    else if (codigo == 3) { // Código 3: Fallo DHT
+      falloDHT = true;
+      digitalWrite(led_fallo_datostemp, HIGH);
+    }
+    else {
     // Verificar palabra "Fallo" en la cadena recibida (case sensitive)
     if (data.indexOf("Fallo") >= 0) {
       digitalWrite(led_fallo_datostemp, HIGH);
@@ -51,9 +86,9 @@ void loop() {
       digitalWrite(led_rec, HIGH);
       led_rec_on = true;
       led_rec_off_time = millis() + led_on_interval;
+      }
     }
   }
-
   // Apagar LED recepción después del intervalo
   if (led_rec_on && millis() >= led_rec_off_time && digitalRead(led_fallo_datostemp) == LOW) {
     digitalWrite(led_rec, LOW);
