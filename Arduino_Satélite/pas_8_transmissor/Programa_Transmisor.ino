@@ -49,6 +49,7 @@ if (mySerial.available() > 0) {
       else {
         esperandoTimeout = false;
         digitalWrite(LedVerd, HIGH);
+        mySerial.print("1 ");
         mySerial.print(h);
         mySerial.print(" ");
         mySerial.println(t);
