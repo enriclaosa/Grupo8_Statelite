@@ -5,7 +5,7 @@ void setup() {
 
 void loop() {
   if(mySerial.available()){
-    String comando = mySerial.readStringuntil('\n');
+    String comando = mySerial.readStringUntil('\n');
     comando.trim();
     int fin = comando.indexOf(' ',0);// Troba la posició del primer espai en la cadena
     int codigo = comando.substring(0, fin).toInt();// Extreu el codi (del principi fins a la posició espai) i el converteix a int
