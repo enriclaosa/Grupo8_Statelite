@@ -37,8 +37,8 @@ def update_plot():
                   continue  # Ignorar líneas mal formateadas
             if codigo == 1 and len(temp) >= 3:  # Temperatura y humedad
                 try:
-                    temperatura = float(temp[1])
-                    humedad = float(temp[2])
+                    humedad = float(temp[1])
+                    temperatura = float(temp[2])
                     temperaturas.append(temperatura)
                     eje_x.append(i)
                     i += 1
