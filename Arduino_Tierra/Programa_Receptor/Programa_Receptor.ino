@@ -31,9 +31,9 @@ void setup() {
 
 void loop() {
   if (Serial.available()) {
-    String comando = Serial.readStringUntil('\n');
-    comando.trim();
-    mySerial.println(comando);
+    String mensaje = Serial.readStringUntil('\n');
+    mensaje.trim();
+    mySerial.println(mensaje);
   }
 
   if (mySerial.available()) {
