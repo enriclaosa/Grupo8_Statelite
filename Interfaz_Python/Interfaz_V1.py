@@ -30,13 +30,13 @@ def update_plot():
             print(linea)
             temp = linea.split(":")
             try:
-                  codigo = int(partes[0])
+                  codigo = int(temp[0])
             except ValueError:
                   continue  # Ignorar líneas mal formateadas
-            if codigo == 1 and len(partes) >= 3:  # Temperatura y humedad
+            if codigo == 1 and len(temp) >= 3:  # Temperatura y humedad
                 try:
-                    temperatura = float(partes[1])
-                    humedad = float(partes[2])
+                    temperatura = float(temp[1])
+                    humedad = float(temp[2])
                     temperaturas.append(temperatura)
                     eje_x.append(i)
                     i += 1
