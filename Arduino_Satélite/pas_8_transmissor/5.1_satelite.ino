@@ -18,7 +18,7 @@ void loop() {
 //orientacio sensor distancia
     }
     else if(codigo == 3){
-      enviarDatos == false;
+      enviarDatos = false;
     }
   }
 }
