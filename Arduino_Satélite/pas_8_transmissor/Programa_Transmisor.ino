@@ -5,12 +5,12 @@
 DHT dht(DHTPIN, DHTTYPE);
 SoftwareSerial mySerial(10, 11); // RX, TX 
 #define LedVerd 6
-unsigned long nextMillis1;
-const unsigned long interval1 = 500;
-unsigned long nextMillis2;
-const unsigned long interval2 = 3000;
+unsigned long nextLedRojo;
+const unsigned long intervalLedRojo = 500;
+unsigned long nextHT;
+const unsigned long intervalHT = 3000;
 unsigned long nextTimeoutHT;
-const unsigned long interval3 = 5000;
+const unsigned long intervalTimeoutHT = 5000;
 bool esperandoTimeout = false;
 bool enviarDatos = true;
 String mensaje;
@@ -20,9 +20,9 @@ void setup() {
   Serial.begin(9600);
   dht.begin();
   pinMode(LedVerd, OUTPUT);
-  nextMillis1 = millis() + interval1;
-  nextMillis2 = millis() + interval2;
-  nextTimeoutHT = millis() + interval3;
+  nextLedRojo = millis() + intervalLedRojo;
+  nextHT = millis() + intervalHT;
+  nextTimeoutHT = millis() + intervalTimeoutHT;
 }
 
 void loop() {
@@ -39,11 +39,11 @@ if (mySerial.available() > 0) {
   if(enviarDatos == true){
     float h = dht.readHumidity();
     float t = dht.readTemperature();
-    if (millis() >= nextMillis2){
+    if (millis() >= nextHT){
       if (isnan(h) || isnan(t)){
         if (!esperandoTimeout){
           esperandoTimeout = true;
-          nextTimeoutHT = millis() + interval3;
+          nextTimeoutHT = millis() + intervalTimeoutHT;
         }
       }
       else {
@@ -52,11 +52,11 @@ if (mySerial.available() > 0) {
         mySerial.print(h);
         mySerial.print(" ");
         mySerial.println(t);
-        nextMillis1 = millis() + interval1; 
+        nextLedRojo = millis() + intervalLedRojo;
       }
-      nextMillis2 = millis() + interval2;
+      nextHT = millis() + intervalHT;
     }
-    if (millis() >= nextMillis1){
+    if (millis() >= nextLedRojo){
       digitalWrite(LedVerd, LOW);
     }
     if(esperandoTimeout && (millis() >= nextTimeoutHT)){
