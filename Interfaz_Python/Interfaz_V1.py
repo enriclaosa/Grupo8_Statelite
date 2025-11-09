@@ -28,10 +28,15 @@ def update_plot():
         while mySerial.in_waiting > 0:
             linea = mySerial.readline().decode('utf-8').rstrip()
             print(linea)
-            temp = linea.split(" ")
-            if len(temp) > 1:
+            temp = linea.split(":")
                 try:
-                    temperatura = float(temp[1])
+                  codigo = int(partes[0])
+                except ValueError:
+                  continue  # Ignorar líneas mal formateadas
+                if codigo == 1 and len(partes) >= 3:  # Temperatura y humedad
+                  try:
+                    temperatura = float(partes[1])
+                    humedad = float(partes[2])
                     temperaturas.append(temperatura)
                     eje_x.append(i)
                     i += 1
