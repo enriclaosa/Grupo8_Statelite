@@ -4,7 +4,7 @@ from tkinter import *
 from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg
 import threading
 
-device = 'COM3'
+device = 'COM4'
 mySerial = serial.Serial(device, 9600, timeout=1)
 
 
