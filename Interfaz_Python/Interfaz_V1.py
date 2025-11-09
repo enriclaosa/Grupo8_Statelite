@@ -30,7 +30,7 @@ def update_plot():
         while mySerial.in_waiting > 0:
             linea = mySerial.readline().decode('utf-8').rstrip()
             print(linea)
-            temp = linea.split(":")
+            temp = linea.split(" ")
             try:
                   codigo = int(temp[0])
             except ValueError:
