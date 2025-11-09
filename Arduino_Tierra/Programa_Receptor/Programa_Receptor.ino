@@ -49,12 +49,12 @@ void loop() {
     last_message_time = millis(); // Actualizar tiempo de último mensaje
 
      //NUEVO Procesar códigos
-    int fin = data.indexOf(':', 0);          
+    int fin = data.indexOf(' ', 0);          
     int codigo = data.substring(0, fin).toInt();
     int inicio = fin + 1;
 
     if (codigo == 1) { // Código 1: Temperatura y Humedad
-      fin = data.indexOf(':', inicio);
+      fin = data.indexOf(' ', inicio);
       if (fin == -1) fin = data.length();
       String tempStr = data.substring(inicio, fin);
       String humStr = data.substring(fin + 1);
@@ -68,7 +68,7 @@ void loop() {
       digitalWrite(led_fallo_datostemp, LOW);
     }
     else if (codigo == 2) { // Código 2: Distancia
-      fin = data.indexOf(':', inicio);
+      fin = data.indexOf(' ', inicio);
       if (fin == -1) fin = data.length();
       distancia = data.substring(inicio, fin).toInt();
     }
