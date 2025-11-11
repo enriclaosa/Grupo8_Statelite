@@ -99,7 +99,7 @@ def BotonCambiarOrientacion():
 def EnviarValor():
     valor = ValorEntry.get()
     if accion_actual == "periodo":
-        mensaje = f"1 {valor}\n"
+        mensaje = f"4 {valor}\n"
         mySerial.write(mensaje.encode('utf-8'))
     elif accion_actual == "orientacion":
         mensaje = f"2 {valor}\n"
