@@ -4,7 +4,8 @@ SoftwareSerial mySerial(10, 11); // RX, TX (azul, naranja)
 
 const int led_rec = 8;                // LED rojo: indica recepción de datos
 const int led_fallo_datostemp = 6;   // LED azul: indica fallo en datos de temperatura
-const int led_timeout = 4;            // LED amarillo: indica timeout (5s sin datos)
+const int led_timeout = 4;          // LED amarillo: indica timeout (5s sin datos)
+const int buzzer = 7;          
 
 const unsigned long led_on_interval = 500; // Duración que permanece encendido el LED de recepción
 unsigned long led_rec_off_time = 0;        // Tiempo para apagar el LED de recepción
@@ -18,6 +19,10 @@ float temperatura = 0; // nuevo: variables para almacenar datos
 float humedad = 0;
 int distancia = 0;
 bool falloDHT = false;
+bool falloDistancia = false;
+
+unsigned long buzzer_on_time = 0;          // para limitar duración del pitido
+const unsigned long buzzer_duration = 500; // 0.5 s
 
 void setup() {
   Serial.begin(9600);
@@ -31,6 +36,9 @@ void setup() {
 
   pinMode(led_timeout, OUTPUT);
   digitalWrite(led_timeout, LOW);
+
+  pinMode(buzzer, OUTPUT);
+  digitalWrite(buzzer, LOW);
 
   last_message_time = millis(); // Inicializar temporizador
 }
@@ -71,7 +79,24 @@ void loop() {
       fin = data.indexOf(' ', inicio);
       if (fin == -1) fin = data.length();
       distancia = data.substring(inicio, fin).toInt();
-    }
+
+    // Mostrar la distancia en consola
+      Serial.print("Distancia medida: ");
+      Serial.print(distancia);
+      Serial.println(" cm");
+
+    // --- Detección de fallo del sensor ---
+      if (distancia <= 0 || distancia > 400) {
+        if (!falloDistancia) {
+          falloDistancia = true;
+          digitalWrite(buzzer, HIGH);
+          buzzer_on_time = millis() + buzzer_duration;
+          Serial.println("Fallo en el sensor de distancia");
+        }
+      } else {
+        falloDistancia = false;
+      }
+  }
     else if (codigo == 3) { // Código 3: Fallo DHT
       falloDHT = true;
       digitalWrite(led_fallo_datostemp, HIGH);
