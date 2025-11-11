@@ -40,13 +40,18 @@ if (Serial.available() > 0) {
       int inicio = fin + 1;
 
     if (codigo == 2) { // Código 2: Cambiar orientación
-            int nuevoAngulo = mensaje.substring(inicio).toInt();
-            if (nuevoAngulo >= 0 && nuevoAngulo <= 180) {
-                angulo = nuevoAngulo;
-                miServo.write(angulo);
-                controlPython = true; // Python toma control
-            }
-        }
+    int nuevoAngulo = mensaje.substring(inicio).toInt();
+      if (nuevoAngulo == -1) {
+        controlPython = false;
+    }
+    else if (nuevoAngulo >= 0 && nuevoAngulo <= 180) {
+        // Control manual desde Python
+        angulo = nuevoAngulo;
+        miServo.write(angulo);
+        controlPython = true;
+    }
+}
+
 
 if (!controlPython) {
     if (millis() - ultimoBarrido >= intervaloBarrido) {
