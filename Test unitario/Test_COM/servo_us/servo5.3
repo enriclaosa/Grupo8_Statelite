@@ -1,0 +1,88 @@
+#include <Servo.h>
+
+// Pines del sensor ultrasónico
+const int trigPin = 9;
+const int echoPin = 8;
+
+// Pin del servo
+const int servoPin = 3;
+
+// Pin del joystick
+const int joyX = A0;
+
+// Crear objeto servo
+Servo miServo;
+int angulo = 90;
+int direccion = 1;
+bool controlPython = false; 
+
+unsigned long ultimoBarrido = 0; // ultimo momento que estaba en auto
+const int pasoBarrido = 1;   // cantidad de grados que se mueve cada ciclo
+const unsigned long intervaloBarrido = 500; // ms entre cada movimiento automático
+
+
+void setup() {
+  Serial.begin(9600);
+  miServo.attach(servoPin);
+  miServo.write(angulo);
+
+  pinMode(trigPin, OUTPUT);
+  pinMode(echoPin, INPUT);
+}
+
+void loop() {
+if (Serial.available() > 0) {
+      String mensaje = Serial.readStringUntil('\n');
+      mensaje.trim();
+
+    int fin = mensaje.indexOf(' ');
+      int codigo = mensaje.substring(0, fin).toInt();
+      int inicio = fin + 1;
+
+    if (codigo == 2) { // Código 2: Cambiar orientación
+            int nuevoAngulo = mensaje.substring(inicio).toInt();
+            if (nuevoAngulo >= 0 && nuevoAngulo <= 180) {
+                angulo = nuevoAngulo;
+                miServo.write(angulo);
+                controlPython = true; // Python toma control
+            }
+        }
+
+if (!controlPython) {
+    if (millis() - ultimoBarrido >= intervaloBarrido) {
+        angulo += direccion * pasoBarrido;
+        if (angulo >= 180) { 
+            angulo = 180;
+            direccion = -1;
+        }
+        if (angulo <= 0) { 
+            angulo = 0;
+            direccion = 1;
+        }
+        miServo.write(angulo);
+        ultimoBarrido = millis();
+    }
+}
+
+  // --- Medir distancia con el sensor ultrasónico ---
+  long duracion;
+  int distancia;
+
+  digitalWrite(trigPin, LOW);
+  delayMicroseconds(2);
+  digitalWrite(trigPin, HIGH);
+  delayMicroseconds(10);
+  digitalWrite(trigPin, LOW);
+
+  duracion = pulseIn(echoPin, HIGH);
+  distancia = duracion * 0.034 / 2; // velocidad del sonido 340 m/s → 0.034 cm/us
+
+  // --- Mostrar datos en el monitor serial ---
+  Serial.print("Angulo: ");
+  Serial.print(angulo);
+  Serial.print("°   |   Distancia: ");
+  Serial.print(distancia);
+  Serial.println(" cm");
+
+    }
+}
