@@ -181,10 +181,10 @@ CambiarPeriodoButton.grid(row=3, column=0, padx=5, pady=5, sticky=N+S+E+W)
 CambiarValorMaxTempButton = Button(window, text="Cambiar valor máximo temperatura", bg='purple', fg="white", command=CambiarValorMaxTemp)
 CambiarValorMaxTempButton.grid(row=4, column=0, padx=5, pady=5, sticky=N+S+E+W)
 
-CambiarOrientacionButton = Button(window, text="Cambiar orientacion sensor", bg='purple', fg="white", command=CambiarOrientacion)
+CambiarOrientacionButton = Button(window, text="Cambiar orientacion sensor", bg='yellow', fg="black", command=CambiarOrientacion)
 CambiarOrientacionButton.grid(row=5, column=0, padx=5, pady=5, sticky=N+S+E+W)
 
-CambiarModoControlButton = Button(window, text="Cambiar modo control sensor", bg='yellow', fg='black', command=CambiarModoControl)
+CambiarModoControlButton = Button(window, text="Cambiar modo control sensor", bg='pink', fg='black', command=CambiarModoControl)
 CambiarModoControlButton.grid(row=6, column=0, padx=5, pady=5, sticky=N+S+E+W)
 
 GraficaFrame = Frame(window)
