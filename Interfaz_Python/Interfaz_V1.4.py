@@ -3,6 +3,7 @@ import matplotlib.pyplot as plt
 from tkinter import *
 from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg
 import threading
+import numpy as np
 
 device = 'COM3'  # Cambiar por el puerto correspondiente
 mySerial = serial.Serial(device, 9600, timeout=1)
@@ -16,6 +17,8 @@ i = 0
 running = False
 limite_alarma = 25.0  # Límite de temperatura para la alarma
 accion_actual = None
+angulos = []
+distancias = []
 
 def Reanudar():    # Envia el mensaje para reanudar el envio
     mensaje = "Reanudar"
@@ -55,8 +58,14 @@ def update_plot():
                 except ValueError:
                     # Si no se puede convertir, ignorar la línea
                     pass
-
-
+            if codigo == 2 and len(temp) >= 3:
+                try:
+                    angulo = float(temp[1])
+                    distancia = float(temp[2])
+                    angulos.append(angulo)
+                    distancias.append(distancia)
+                except ValueError:
+                    pass
         ax.clear()
         ax.set_xlim(0, max(100, i))
         ax.set_ylim(20, 30)  # Limites de temperatura
@@ -67,6 +76,19 @@ def update_plot():
         ax.set_ylabel('Temperatura (°C)')
         ax.legend()
         canvas.draw()
+
+        ax_radar.clear()
+        ax_radar.set_title('Radar de Ultrasonidos')
+        ax_radar.set_ylim(0, 50)
+        ax_radar.set_xticks(np.deg2rad(np.arange(0, 181, 20)))
+        ax_radar.set_xticklabels([f"{int(x)}°" for x in np.arange(0, 181, 20)])
+        if len(angulos) > 1:
+            radianes = np.deg2rad(np.array(angulos))  # convertir grados a radianes
+            ax_radar.plot(radianes, distancias, color="yellow") 
+            ax_radar.plot([radianes[-1]], [distancias[-1]], "go", markersize=10)
+            ax_radar.plot([0, radianes[-1]], [0, distancias[-1]], "g")
+        canvas_radar.draw()
+
         # Llama a sí mismo después de 500 ms para actualizar la gráfica
         window.after(500, update_plot)
 
@@ -140,6 +162,8 @@ window.rowconfigure(5, weight=1)
 window.rowconfigure(6, weight=1)
 window.columnconfigure(0, weight=1)
 window.columnconfigure(1, weight=10)
+window.columnconfigure(2, weight=1)
+window.columnconfigure(3, weight=10)
 
 # Elementos de la interfaz
 IniciarButton = Button(window, text="Iniciar gráfica temp", bg='green', fg="black", command=Iniciarclick)
@@ -154,7 +178,7 @@ ReanudarButton.grid(row=2, column=0, padx=5, pady=5, sticky=N + S + E + W)
 CambiarPeriodoButton = Button(window, text="Cambiar periodo transmision", bg='orange', fg="black", command=CambiarPeriodo)
 CambiarPeriodoButton.grid(row=3, column=0, padx=5, pady=5, sticky=N+S+E+W)
 
-CambiarValorMaxTempButton = Button(window, text="Cambiar valor máximo temperatura", bg='purple', fg="white", command=CambiarValorMaxTemp)#esta per fer
+CambiarValorMaxTempButton = Button(window, text="Cambiar valor máximo temperatura", bg='purple', fg="white", command=CambiarValorMaxTemp)
 CambiarValorMaxTempButton.grid(row=4, column=0, padx=5, pady=5, sticky=N+S+E+W)
 
 CambiarOrientacionButton = Button(window, text="Cambiar orientacion sensor", bg='purple', fg="white", command=CambiarOrientacion)
@@ -169,6 +193,13 @@ GraficaFrame.grid(row=0, column=1, rowspan=5, padx=5, pady=5, sticky=N + S + E +
 fig, ax = plt.subplots(figsize=(6,4))
 canvas = FigureCanvasTkAgg(fig, master=GraficaFrame)
 canvas.get_tk_widget().pack(fill=BOTH, expand=1)
+
+RadarFrame = Frame(window)
+RadarFrame.grid(row=0, column=3, rowspan=7, padx=5, pady=5, sticky=N + S + E + W)
+fig_radar = plt.figure()
+ax_radar = fig_radar.add_subplot(111, projection='polar')
+canvas_radar = FigureCanvasTkAgg(fig_radar, master=RadarFrame)
+canvas_radar.get_tk_widget().pack(fill=BOTH, expand=1)
 
 # Barra valor y mensaje debajo de la grafica
 MensajeVar = StringVar()
