@@ -97,7 +97,10 @@ def CambiarOrientacion():
     ValorEntry.delete(0, END)
 
 def CambiarValorMaxTemp():
-    #esta per fer
+    global accion_actual
+    accion_actual = "ValorTempMax"
+    MensajeVar.set("Escribe el valor máximo de la temperatura (grados centígrados):")
+    ValorEntry.delete(0,END)
 
 def CambiarModoControl():
     mensaje = "Cambio"
@@ -117,6 +120,8 @@ def EnviarValor():
         except ValueError:
             MensajeVar.set("Introduce un número válido")
             return
+    elif accion_actual == "ValorTempMax":
+        limite_alarma = valor
 
     # Despues de enviar, vacia la barra y el mensaje
     MensajeVar.set("")
