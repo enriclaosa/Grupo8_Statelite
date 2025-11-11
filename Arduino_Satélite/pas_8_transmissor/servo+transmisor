@@ -1,5 +1,6 @@
 #include <SoftwareSerial.h>
 #include <DHT.h>
+#include <Servo.h>
 #define DHTPIN 2
 #define DHTTYPE DHT11
 DHT dht(DHTPIN, DHTTYPE);
@@ -99,47 +100,37 @@ if (mySerial.available() > 0) {
   duracion = pulseIn(echoPin, HIGH);
   distancia = duracion * 0.034 / 2; // cm
 
-  // --- Enviar datos DHT ---
-  if (enviarDatos) {
+    
+    if(mensaje == "Parar")
+    enviarDatos = false;
+    if(mensaje == "Reanudar")
+    enviarDatos = true;
+    if(enviarDatos == true){
     float h = dht.readHumidity();
     float t = dht.readTemperature();
-    if (millis() >= nextHT) {
-      if (isnan(h) || isnan(t)) {
-        if (!esperandoTimeout) {
-          esperandoTimeout = true;
-          nextTimeoutHT = millis() + intervalTimeoutHT;
+    if (millis() >= nextHT){
+        if (isnan(h) || isnan(t)){
+        if (!esperandoTimeout){
+            esperandoTimeout = true;
+            nextTimeoutHT = millis() + intervalTimeoutHT;
         }
-      }
-if(mensaje == "Parar")
-  enviarDatos = false;
-if(mensaje == "Reanudar")
-  enviarDatos = true;
-if(enviarDatos == true){
-  float h = dht.readHumidity();
-  float t = dht.readTemperature();
-  if (millis() >= nextHT){
-    if (isnan(h) || isnan(t)){
-      if (!esperandoTimeout){
-        esperandoTimeout = true;
-        nextTimeoutHT = millis() + intervalTimeoutHT;
-      }
+        }
+        else {
+        esperandoTimeout = false;
+        digitalWrite(LedVerd, HIGH);
+        mySerial.print("1 ");
+        mySerial.print(h);
+        mySerial.print(" ");
+        mySerial.println(t);
+        nextLedRojo = millis() + intervalLedRojo;
+        }
+        nextHT = millis() + intervalHT;
     }
-    else {
-      esperandoTimeout = false;
-      digitalWrite(LedVerd, HIGH);
-      mySerial.print("1 ");
-      mySerial.print(h);
-      mySerial.print(" ");
-      mySerial.println(t);
-      nextLedRojo = millis() + intervalLedRojo;
-    }
-    nextHT = millis() + intervalHT;
-  }
-  if (millis() >= nextLedRojo)
-    digitalWrite(LedVerd, LOW);
-  if(esperandoTimeout && (millis() >= nextTimeoutHT)){
-    mySerial.println("Fallo");
-    esperandoTimeout = false;
-  }
-}
+    if (millis() >= nextLedRojo)
+        digitalWrite(LedVerd, LOW);
+    if(esperandoTimeout && (millis() >= nextTimeoutHT)){
+        mySerial.println("Fallo");
+        esperandoTimeout = false;
+        }
+    }   
 }
