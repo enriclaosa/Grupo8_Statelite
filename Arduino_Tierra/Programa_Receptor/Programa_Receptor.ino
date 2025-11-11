@@ -76,11 +76,6 @@ void loop() {
       falloDHT = true;
       digitalWrite(led_fallo_datostemp, HIGH);
     }
-    else if(codigo == 4){
-      fin=comando.indexOf(' ',inicio);
-      if(fin == -1) fin = comando.length();
-      intervalHT = comando.substring(inicio, fin).toInt() * 1000;
-    }
     else {
     // Verificar palabra "Fallo" en la cadena recibida (case sensitive)
     if (data.indexOf("Fallo") >= 0) {
