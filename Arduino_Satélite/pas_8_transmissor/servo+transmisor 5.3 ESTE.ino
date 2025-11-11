@@ -27,7 +27,12 @@ bool controlPython = false;
 
 unsigned long ultimoBarrido = 0;
 const int pasoBarrido = 1;
-const unsigned long intervaloBarrido = 500;
+const unsigned long intervaloBarrido = 15;
+
+unsigned long tiempoInicioPulso = 0;
+bool esperandoPulso = false;
+long duracion = 0;
+int distancia = 0;
 
 String mensaje;
 
@@ -90,15 +95,25 @@ if (mySerial.available() > 0) {
       ultimoBarrido = millis();
     }
   }
-  long duracion;
-  int distancia;
-  digitalWrite(trigPin, LOW);
-  delayMicroseconds(2);
-  digitalWrite(trigPin, HIGH);
-  delayMicroseconds(10);
-  digitalWrite(trigPin, LOW);
-  duracion = pulseIn(echoPin, HIGH);
-  distancia = duracion * 0.034 / 2; // cm
+  if (!esperandoPulso) {
+    digitalWrite(trigPin, LOW);
+    delayMicroseconds(2);
+    digitalWrite(trigPin, HIGH);
+    delayMicroseconds(10);
+    digitalWrite(trigPin, LOW);
+    tiempoInicioPulso = micros();
+    esperandoPulso = true;
+  } else {
+    if (digitalRead(echoPin) == HIGH) {
+      duracion = micros() - tiempoInicioPulso;
+      distancia = duracion * 0.034 / 2;
+      esperandoPulso = false;
+    } else if (micros() - tiempoInicioPulso > 30000) {
+      // timeout si no llega eco
+      distancia = -1;
+      esperandoPulso = false;
+    }
+  }
 
     
     if(mensaje == "Parar")
