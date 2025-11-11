@@ -1,78 +1,103 @@
 #include <Servo.h>
 
-// Pines del sensor ultrasónico
+// --- Pines ---
 const int trigPin = 9;
 const int echoPin = 8;
-
-// Pin del servo
 const int servoPin = 3;
-
-// Pin del joystick
 const int joyX = A0;
 
-// Crear objeto servo
+// --- Variables ---
 Servo miServo;
+bool modoAutomatico = true;  // Cambia a true para barrido automático
 
-// Servo en manual o automatico
-bool servo_M_A = false;
+int angulo = 90;     // Posición inicial del servo
+int direccion = 1;   // Para el modo automático
+
+// --- Temporizadores ---
+unsigned long tiempoAnteriorServo = 0;
+unsigned long tiempoAnteriorSensor = 0;
+unsigned long tiempoAnteriorSerial = 0;
+
+// --- Intervalos (ms) ---
+const unsigned long intervaloServo = 15;     // velocidad del barrido automático
+const unsigned long intervaloSensor = 100;   // frecuencia de medición
+const unsigned long intervaloSerial = 800;   // frecuencia de impresión
+const unsigned long intervaloJoy = 50;       // frecuencia de lectura del joystick
+
+// --- Variables auxiliares ---
+int distancia = 0;
+unsigned long tiempoAnteriorJoy = 0;
 
 void setup() {
   Serial.begin(9600);
   miServo.attach(servoPin);
-
   pinMode(trigPin, OUTPUT);
   pinMode(echoPin, INPUT);
 }
 
 void loop() {
+  unsigned long tiempoActual = millis();
 
-  if(data.indexOf("Cambio") >= 0){
-    if(servo_M_A){
-      servo_M_A = False;
-    }
-    if(!servo_M_A){
-      servo_M_A = True;
-    }
-  }
-  
-  // --- Lectura del joystick ---
-  if(sevro_M_A){
-    int xValue = analogRead(joyX); // valor entre 0 y 1023
-
-  // Convertir a ángulo (0° a 180°)
-    int angulo = map(xValue, 0, 1023, 0, 180);
-    miServo.write(angulo);
-  }
-
-  if(!servo_M_A){
+  // --- SERVO: modo automático o manual "sticky" ---
+  if (modoAutomatico) {
+    // Movimiento automático con rebote 0° ↔ 180°
+    if (tiempoActual - tiempoAnteriorServo >= intervaloServo) {
+      tiempoAnteriorServo = tiempoActual;
+      angulo += direccion;
+      if (angulo >= 180 || angulo <= 0) {
+        direccion *= -1;
+      }
       miServo.write(angulo);
-  // Cambiar dirección al llegar a los extremos
-    angulo += direccion;
-    if (angulo >= 180) {
-      direccion = -1;
-    }   
-    else if (angulo <= 0) {
-      direccion = 1;
+    }
+
+  } else {
+    // Modo manual "sticky"
+    if (tiempoActual - tiempoAnteriorJoy >= intervaloJoy) {
+      tiempoAnteriorJoy = tiempoActual;
+      int xValue = analogRead(joyX);
+
+      // Zona muerta alrededor del centro
+      int deadZone = 100;
+      int centro = 512;
+
+      if (xValue > centro + deadZone) {
+        angulo++;
+      } else if (xValue < centro - deadZone) {
+        angulo--;
+      }
+
+      // Limitar ángulo entre 0 y 180
+      angulo = constrain(angulo, 0, 180);
+      miServo.write(angulo);
     }
   }
-  // --- Medir distancia con el sensor ultrasónico ---
-  long duracion;
-  int distancia;
 
+  // --- SENSOR ultrasónico ---
+  if (tiempoActual - tiempoAnteriorSensor >= intervaloSensor) {
+    tiempoAnteriorSensor = tiempoActual;
+    distancia = medirDistancia();
+  }
+
+  // --- MONITOR SERIAL ---
+  if (tiempoActual - tiempoAnteriorSerial >= intervaloSerial) {
+    tiempoAnteriorSerial = tiempoActual;
+    Serial.print("Angulo: ");
+    Serial.print(angulo);
+    Serial.print("° | Distancia: ");
+    Serial.print(distancia);
+    Serial.println(" cm");
+  }
+}
+
+// --- Función para medir distancia ---
+int medirDistancia() {
   digitalWrite(trigPin, LOW);
   delayMicroseconds(2);
   digitalWrite(trigPin, HIGH);
   delayMicroseconds(10);
   digitalWrite(trigPin, LOW);
 
-  duracion = pulseIn(echoPin, HIGH);
-  distancia = duracion * 0.034 / 2; // velocidad del sonido 340 m/s → 0.034 cm/us
-
-  // --- Mostrar datos en el monitor serial ---
-  Serial.print("Angulo: ");
-  Serial.print(angulo);
-  Serial.print("°   |   Distancia: ");
-  Serial.print(distancia);
-  Serial.println(" cm");
-
+  long duracion = pulseIn(echoPin, HIGH, 25000); // Timeout 25 ms (~4 m)
+  int distanciaCM = duracion * 0.034 / 2;
+  return distanciaCM;
 }
