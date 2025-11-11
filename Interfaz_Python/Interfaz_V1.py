@@ -4,7 +4,7 @@ from tkinter import *
 from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg
 import threading
 
-device = 'COM4'  # Cambiar por el puerto correspondiente
+device = 'COM3'  # Cambiar por el puerto correspondiente
 mySerial = serial.Serial(device, 9600, timeout=1)
 
 
@@ -15,6 +15,7 @@ eje_x = []
 i = 0
 running = False
 limite_alarma = 25.0  # Límite de temperatura para la alarma
+accion_actual = None
 
 def Reanudar():    # Envia el mensaje para reanudar el envio
     mensaje = "Reanudar"
@@ -83,13 +84,47 @@ def Detenerclick():
     global running
     running = False
 
+def BotonCambiarPeriodo():
+    global accion_actual
+    accion_actual = "periodo"
+    MensajeVar.set("Escribe el nuevo periodo de transmision (segundos):")
+    ValorEntry.delete(0, END)
+
+def BotonCambiarOrientacion():
+    global accion_actual
+    accion_actual = "orientacion"
+    MensajeVar.set("Escribe la nueva orientacion del sensor (grados):")
+    ValorEntry.delete(0, END)
+
+def EnviarValor():
+    valor = ValorEntry.get()
+    if accion_actual == "periodo":
+        mensaje = f"4 {valor}\n"
+        mySerial.write(mensaje.encode('utf-8'))
+    elif accion_actual == "orientacion":
+       try:
+            valor_int = int(valor)
+            if valor_int == -1 or (0 <= valor_int <= 180):
+                mensaje = f"2 {valor_int}\n"
+                mySerial.write(mensaje.encode('utf-8'))
+        except ValueError:
+            MensajeVar.set("Introduce un número válido")
+            return
+
+    # Despues de enviar, vacia la barra y el mensaje
+    MensajeVar.set("")
+    ValorEntry.delete(0, END)
+
 # INTERFAZ
 
 window = Tk()
-window.geometry("800x400")
+window.geometry("800x500")
 window.rowconfigure(0, weight=1)
 window.rowconfigure(1, weight=1)
 window.rowconfigure(2, weight=1)
+window.rowconfigure(3, weight=1)
+window.rowconfigure(4, weight=1)
+window.rowconfigure(5, weight=1)
 window.columnconfigure(0, weight=1)
 window.columnconfigure(1, weight=10)
 
@@ -104,11 +139,28 @@ IniciarButton.grid(row=1, column=0, padx=5, pady=5, sticky=N + S + E + W)
 ReanudarButton = Button(window, text="Reanudar envío datos", bg='blue', fg="white", command=Reanudar)
 ReanudarButton.grid(row=2, column=0, padx=5, pady=5, sticky=N + S + E + W)
 
+CambiarPeriodoButton = Button(window, text="Cambiar periodo transmision", bg='orange', fg="black", command=BotonCambiarPeriodo)
+CambiarPeriodoButton.grid(row=3, column=0, padx=5, pady=5, sticky=N+S+E+W)
+
+CambiarOrientacionButton = Button(window, text="Cambiar orientacion sensor", bg='purple', fg="white", command=BotonCambiarOrientacion)
+CambiarOrientacionButton.grid(row=4, column=0, padx=5, pady=5, sticky=N+S+E+W)
+
 GraficaFrame = Frame(window)
-GraficaFrame.grid(row=0, column=1, rowspan=3, padx=5, pady=5, sticky=N + S + E + W)
+GraficaFrame.grid(row=0, column=1, rowspan=5, padx=5, pady=5, sticky=N + S + E + W)
 
 fig, ax = plt.subplots(figsize=(6,4))
 canvas = FigureCanvasTkAgg(fig, master=GraficaFrame)
 canvas.get_tk_widget().pack(fill=BOTH, expand=1)
+
+# Barra valor y mensaje debajo de la grafica
+MensajeVar = StringVar()
+MensajeLabel = Label(window, textvariable=MensajeVar, anchor=W)
+MensajeLabel.grid(row=5, column=1, padx=5, pady=2, sticky=N+S+E+W)
+
+ValorEntry = Entry(window)
+ValorEntry.grid(row=6, column=1, padx=5, pady=2, sticky=N+S+E+W)
+
+EnviarButton = Button(window, text="Envia", bg="gray", command=EnviarValor)
+EnviarButton.grid(row=7, column=1, padx=5, pady=2, sticky=N+S+E+W)
 
 window.mainloop()
