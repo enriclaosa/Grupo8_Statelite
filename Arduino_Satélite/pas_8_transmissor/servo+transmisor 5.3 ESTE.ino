@@ -34,6 +34,11 @@ bool esperandoPulso = false;
 long duracion = 0;
 int distancia = 0;
 
+const unsigned long intervaloDistancia = 200; // 200ms entre medidas
+unsigned long nextMedidaDistancia = 0;
+int ultimaDistanciaEnviada = -2;
+
+
 String mensaje;
 
 void setup() {
@@ -74,11 +79,15 @@ if (mySerial.available() > 0) {
         miServo.write(angulo);
         controlPython = true; // Python toma control
       }
+      if (nuevoAngulo == -1)
+        controlPython = false;
     }
     else if(codigo == 3){
       enviarDatos = false;
     }
 }
+
+
 // --- Barrido automático del servo si Python no controla ---
   if (!controlPython) {
     if (millis() - ultimoBarrido >= intervaloBarrido) {
@@ -86,6 +95,7 @@ if (mySerial.available() > 0) {
       if (angulo >= 180) {
         angulo = 180;
         direccion = -1;
+
       }
       if (angulo <= 0) {
         angulo = 0;
@@ -95,27 +105,43 @@ if (mySerial.available() > 0) {
       ultimoBarrido = millis();
     }
   }
-  if (!esperandoPulso) {
-    digitalWrite(trigPin, LOW);
-    delayMicroseconds(2);
-    digitalWrite(trigPin, HIGH);
-    delayMicroseconds(10);
-    digitalWrite(trigPin, LOW);
-    tiempoInicioPulso = micros();
-    esperandoPulso = true;
-  } else {
-    if (digitalRead(echoPin) == HIGH) {
-      duracion = micros() - tiempoInicioPulso;
-      distancia = duracion * 0.034 / 2;
-      esperandoPulso = false;
-    } else if (micros() - tiempoInicioPulso > 30000) {
-      // timeout si no llega eco
-      distancia = -1;
-      esperandoPulso = false;
-    }
-  }
-
     
+  unsigned long ahora = millis();
+
+    // Medir distancia sin bloquear
+    if (ahora >= nextMedidaDistancia) {
+        nextMedidaDistancia = ahora + intervaloDistancia;
+
+        // disparar pulso
+        digitalWrite(trigPin, LOW);
+        delayMicroseconds(2);
+        digitalWrite(trigPin, HIGH);
+        delayMicroseconds(10);
+        digitalWrite(trigPin, LOW);
+
+        // medir pulso manualmente con timeout
+        unsigned long startTime = micros();
+        while (digitalRead(echoPin) == LOW && micros() - startTime < 30000) ; // esperar subida
+        unsigned long tiempoPulso = 0;
+        if (digitalRead(echoPin) == HIGH) {
+            unsigned long pulsoInicio = micros();
+            while (digitalRead(echoPin) == HIGH && micros() - pulsoInicio < 30000) ; // esperar bajada
+            tiempoPulso = micros() - pulsoInicio;
+        }
+
+        if (tiempoPulso == 0) {
+            distancia = -1;
+            esperandoPulso = false;
+        } else {
+            distancia = tiempoPulso * 0.034 / 2;
+        }
+         if (distancia != ultimaDistanciaEnviada) {
+            Serial.print("Distancia  "); 
+            Serial.print(distancia); 
+            Serial.println(" cm");
+            ultimaDistanciaEnviada = distancia;
+         }
+    }
     if(mensaje == "Parar")
     enviarDatos = false;
     if(mensaje == "Reanudar")
@@ -137,6 +163,10 @@ if (mySerial.available() > 0) {
         mySerial.print(h);
         mySerial.print(" ");
         mySerial.println(t);
+        mySerial.print("2 ");
+        mySerial.print(angulo);
+        mySerial.print(" ");
+        mySerial.println(distancia);
         nextLedRojo = millis() + intervalLedRojo;
         }
         nextHT = millis() + intervalHT;
