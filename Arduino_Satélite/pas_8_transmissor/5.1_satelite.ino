@@ -34,7 +34,7 @@ bool esperandoPulso = false;
 long duracion = 0;
 int distancia = 0;
 
-const unsigned long intervaloDistancia = 200; // 200ms entre medidas
+const unsigned long intervaloDistancia = 300; // 200ms entre medidas
 unsigned long nextMedidaDistancia = 0;
 int ultimaDistanciaEnviada = -2;
 
@@ -58,6 +58,7 @@ void setup() {
 }
 
 void loop() {  
+  float h, t;
 if (mySerial.available() > 0) {
   mensaje = mySerial.readStringUntil('\n');
   Serial.println(mensaje);
@@ -79,30 +80,32 @@ if (mySerial.available() > 0) {
         miServo.write(angulo);
         controlPython = true; // Python toma control
       }
+      if (nuevoAngulo == -1)
+        controlPython = false;
     }
     else if(codigo == 3){
       enviarDatos = false;
     }
 }
 
+unsigned long ahora = millis();
+if (!controlPython) {
+    if (ahora - ultimoBarrido >= intervaloBarrido) {
+        int pasos = (ahora - ultimoBarrido) / intervaloBarrido;
+        angulo += direccion * pasoBarrido * pasos;
+        if (angulo >= 180) {
+           angulo = 180; 
+           direccion = -1; }
 
-// --- Barrido automático del servo si Python no controla ---
-  if (!controlPython) {
-    if (millis() - ultimoBarrido >= intervaloBarrido) {
-      angulo += direccion * pasoBarrido;
-      if (angulo >= 180) {
-        angulo = 180;
-        direccion = -1;
-      }
-      if (angulo <= 0) {
-        angulo = 0;
-        direccion = 1;
-      }
-      miServo.write(angulo);
-      ultimoBarrido = millis();
+        if (angulo <= 0)   { 
+          angulo = 0;   
+          direccion = 1; }
+
+        miServo.write(angulo);
+        ultimoBarrido += pasos * intervaloBarrido; // actualizamos correctamente
     }
-  }
-  unsigned long ahora = millis();
+}
+
 
     // Medir distancia sin bloquear
     if (ahora >= nextMedidaDistancia) {
@@ -117,7 +120,7 @@ if (mySerial.available() > 0) {
 
         // medir pulso manualmente con timeout
         unsigned long startTime = micros();
-        while (digitalRead(echoPin) == LOW && micros() - startTime < 30000) ; // esperar subida
+        while (digitalRead(echoPin) == LOW && micros() - startTime < 20000) ; // esperar subida
         unsigned long tiempoPulso = 0;
         if (digitalRead(echoPin) == HIGH) {
             unsigned long pulsoInicio = micros();
@@ -132,7 +135,7 @@ if (mySerial.available() > 0) {
             distancia = tiempoPulso * 0.034 / 2;
         }
          if (distancia != ultimaDistanciaEnviada) {
-            Serial.print("Distancia medida: "); 
+            Serial.print("Distancia  "); 
             Serial.print(distancia); 
             Serial.println(" cm");
             ultimaDistanciaEnviada = distancia;
@@ -142,32 +145,27 @@ if (mySerial.available() > 0) {
     enviarDatos = false;
     if(mensaje == "Reanudar")
     enviarDatos = true;
-    if(enviarDatos == true){
-    float h = dht.readHumidity();
-    float t = dht.readTemperature();
+
+   
     if (millis() >= nextHT){
-        if (isnan(h) || isnan(t)){
-        if (!esperandoTimeout){
-            esperandoTimeout = true;
-            nextTimeoutHT = millis() + intervalTimeoutHT;
-        }
-        }
-        else {
-        esperandoTimeout = false;
-        digitalWrite(LedVerd, HIGH);
-        mySerial.print("1 ");
-        mySerial.print(h);
-        mySerial.print(" ");
+       float h = dht.readHumidity();
+        float t = dht.readTemperature();
+        mySerial.print("1 "); 
+        mySerial.print(h); 
+        mySerial.print(" "); 
         mySerial.println(t);
-        nextLedRojo = millis() + intervalLedRojo;
-        }
+        mySerial.print("2 "); 
+        mySerial.print(angulo); 
+        mySerial.print(" "); 
+        mySerial.println(distancia);
         nextHT = millis() + intervalHT;
     }
+        
     if (millis() >= nextLedRojo)
         digitalWrite(LedVerd, LOW);
     if(esperandoTimeout && (millis() >= nextTimeoutHT)){
         mySerial.println("Fallo");
         esperandoTimeout = false;
         }
-    }   
+       
 }
