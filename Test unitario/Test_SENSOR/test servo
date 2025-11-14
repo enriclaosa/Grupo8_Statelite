@@ -1,0 +1,31 @@
+#include <Servo.h>
+
+#define SERVOPIN 3
+
+Servo miServo;
+
+void setup() {
+  Serial.begin(9600);
+  miServo.attach(SERVOPIN);
+  Serial.println("Test unitario Servo iniciado...");
+}
+
+void loop() {
+  // Barrido de 0 a 180 grados
+  for (int angulo = 0; angulo <= 180; angulo += 5) {
+    miServo.write(angulo);
+    Serial.print("Servo en: ");
+    Serial.print(angulo);
+    Serial.println("°");
+    delay(500); // Espera para que el servo llegue al ángulo
+  }
+
+  // Barrido de 180 a 0 grados
+  for (int angulo = 180; angulo >= 0; angulo -= 5) {
+    miServo.write(angulo);
+    Serial.print("Servo en: ");
+    Serial.print(angulo);
+    Serial.println("°");
+    delay(500); // Espera para que el servo llegue al ángulo
+  }
+}
