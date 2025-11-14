@@ -1,0 +1,35 @@
+#define TRIGPIN 9
+#define ECHOPIN 8
+
+unsigned long nextMedida = 0;
+const unsigned long intervaloMedida = 200; // 200 ms entre medidas
+long distancia = -1;
+
+void setup() {
+  Serial.begin(9600);
+  pinMode(TRIGPIN, OUTPUT);
+  pinMode(ECHOPIN, INPUT);
+  Serial.println("Test unitario sensor de distancia iniciado...");
+}
+
+void loop() {
+  unsigned long ahora = millis();
+  if (ahora >= nextMedida) {
+    nextMedida = ahora + intervaloMedida;
+
+    // Disparar pulso
+    digitalWrite(TRIGPIN, LOW);
+    delayMicroseconds(2);
+    digitalWrite(TRIGPIN, HIGH);
+    delayMicroseconds(10);
+    digitalWrite(TRIGPIN, LOW);
+
+    // Leer duración del pulso
+    long duracion = pulseIn(ECHOPIN, HIGH, 30000); // Timeout 30 ms
+    if (duracion == 0) {
+      distancia = -1; // no detectado
+    } else {
+      distancia = duracion * 0.034 / 2; // cm
+    }
+
+    // Mostrar distancia
