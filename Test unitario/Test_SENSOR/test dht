@@ -1,0 +1,32 @@
+#include <DHT.h>
+
+#define DHTPIN 2     // Pin donde está conectado el DHT11
+#define DHTTYPE DHT11
+
+DHT dht(DHTPIN, DHTTYPE);
+
+void setup() {
+  Serial.begin(9600);
+  dht.begin();
+  Serial.println("Test unitario DHT11 iniciado...");
+}
+
+void loop() {
+  // Leer humedad
+  float humedad = dht.readHumidity();
+  // Leer temperatura en Celsius
+  float temperatura = dht.readTemperature();
+
+  // Comprobar si hay error en la lectura
+  if (isnan(humedad) || isnan(temperatura)) {
+    Serial.println("Error al leer del sensor DHT11");
+  } else {
+    Serial.print("Humedad: ");
+    Serial.print(humedad);
+    Serial.print("%  |  Temperatura: ");
+    Serial.print(temperatura);
+    Serial.println("°C");
+  }
+
+  delay(2000); // Esperar 2 segundos antes de la siguiente lectura
+}
