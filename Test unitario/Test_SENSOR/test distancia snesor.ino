@@ -30,6 +30,7 @@ void loop() {
       distancia = -1; // no detectado
     } else {
       distancia = duracion * 0.034 / 2; // cm
+      Serial.print(distancia);
     }
-
-    // Mostrar distancia
+  }
+}
