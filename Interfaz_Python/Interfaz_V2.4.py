@@ -5,7 +5,7 @@ from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg
 import threading
 import numpy as np
 
-device = 'COM3'  # Cambiar por el puerto correspondiente
+device = 'COM5'  # Cambiar por el puerto correspondiente
 mySerial = serial.Serial(device, 9600, timeout=1)
 
 
@@ -79,7 +79,11 @@ def update_plot():
 
         ax_radar.clear()
         ax_radar.set_title('Radar de Ultrasonidos')
-        ax_radar.set_ylim(0, 50)
+        ax_radar.set_thetamin(0)
+        ax_radar.set_thetamax(180)
+        ax_radar.set_xlabel('Distancia (cm)', labelpad=-50)
+        ax_radar.set_ylabel('Orientación sensor (grados)', labelpad=25)
+        ax_radar.set_ylim(0, 100)
         ax_radar.set_xticks(np.deg2rad(np.arange(0, 181, 20)))
         ax_radar.set_xticklabels([f"{int(x)}°" for x in np.arange(0, 181, 20)])
         if len(angulos) > 1:
@@ -152,7 +156,7 @@ def EnviarValor():
 # INTERFAZ
 
 window = Tk()
-window.geometry("800x500")
+window.geometry("1400x800")
 window.rowconfigure(0, weight=1)
 window.rowconfigure(1, weight=1)
 window.rowconfigure(2, weight=1)
@@ -160,10 +164,12 @@ window.rowconfigure(3, weight=1)
 window.rowconfigure(4, weight=1)
 window.rowconfigure(5, weight=1)
 window.rowconfigure(6, weight=1)
+window.rowconfigure(7, weight=1)
+window.rowconfigure(8, weight=1)
+window.rowconfigure(9, weight=1)
 window.columnconfigure(0, weight=1)
 window.columnconfigure(1, weight=10)
-window.columnconfigure(2, weight=1)
-window.columnconfigure(3, weight=10)
+window.columnconfigure(2, weight=10)
 
 # Elementos de la interfaz
 IniciarButton = Button(window, text="Iniciar gráfica temp", bg='green', fg="black", command=Iniciarclick)
@@ -188,14 +194,14 @@ CambiarModoControlButton = Button(window, text="Cambiar modo control sensor", bg
 CambiarModoControlButton.grid(row=6, column=0, padx=5, pady=5, sticky=N+S+E+W)
 
 GraficaFrame = Frame(window)
-GraficaFrame.grid(row=0, column=1, rowspan=5, padx=5, pady=5, sticky=N + S + E + W)
+GraficaFrame.grid(row=0, column=1, rowspan=7, padx=5, pady=5, sticky=N + S + E + W)
 
 fig, ax = plt.subplots(figsize=(6,4))
 canvas = FigureCanvasTkAgg(fig, master=GraficaFrame)
 canvas.get_tk_widget().pack(fill=BOTH, expand=1)
 
 RadarFrame = Frame(window)
-RadarFrame.grid(row=0, column=3, rowspan=7, padx=5, pady=5, sticky=N + S + E + W)
+RadarFrame.grid(row=0, column=2, rowspan=7, padx=5, pady=5, sticky=N + S + E + W)
 fig_radar = plt.figure()
 ax_radar = fig_radar.add_subplot(111, projection='polar')
 canvas_radar = FigureCanvasTkAgg(fig_radar, master=RadarFrame)
@@ -204,12 +210,12 @@ canvas_radar.get_tk_widget().pack(fill=BOTH, expand=1)
 # Barra valor y mensaje debajo de la grafica
 MensajeVar = StringVar()
 MensajeLabel = Label(window, textvariable=MensajeVar, anchor=W)
-MensajeLabel.grid(row=5, column=1, padx=5, pady=2, sticky=N+S+E+W)
+MensajeLabel.grid(row=7, column=0, columnspan = 3, padx=5, pady=2, sticky=N+S+E+W)
 
 ValorEntry = Entry(window)
-ValorEntry.grid(row=6, column=1, padx=5, pady=2, sticky=N+S+E+W)
+ValorEntry.grid(row=8, column=0, columnspan = 3, padx=5, pady=2, sticky=N+S+E+W)
 
 EnviarButton = Button(window, text="Envia", bg="gray", command=EnviarValor)
-EnviarButton.grid(row=7, column=1, padx=5, pady=2, sticky=N+S+E+W)
+EnviarButton.grid(row=9, column=0, columnspan = 3, padx=5, pady=2, sticky=N+S+E+W)
 
 window.mainloop()
