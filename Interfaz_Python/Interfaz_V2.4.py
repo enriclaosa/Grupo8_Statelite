@@ -66,6 +66,10 @@ def update_plot():
                     distancias.append(distancia)
                 except ValueError:
                     pass
+        # Limitamos a últimos 5 datos
+        angulos[:] = angulos[-5:]  # Limit 5 últims
+        distancias[:] = distancias[-5:]  # Limit 5 últims
+        
         ax.clear()
         ax.set_xlim(0, max(100, i))
         ax.set_ylim(20, 30)  # Limites de temperatura
