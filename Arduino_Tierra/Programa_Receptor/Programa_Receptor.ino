@@ -14,7 +14,6 @@ bool led_rec_on = false;
 unsigned long last_message_time = 0;       // Última vez que se recibió dato
 const unsigned long timeout_interval = 8000;  // Timeout en milisegundos
 
-
 float temperatura = 0; // nuevo: variables para almacenar datos
 float humedad = 0;
 int distancia = 0;
@@ -51,15 +50,21 @@ void loop() {
   }
 
   if (mySerial.available()) {
-    String data = mySerial.readString(); // Leer hasta salto de línea
+    String data = mySerial.readStringUntil('\n'); // Leer hasta salto de línea
     Serial.println(data);
 
     last_message_time = millis(); // Actualizar tiempo de último mensaje
 
-     //NUEVO Procesar códigos
-    int fin = data.indexOf(' ', 0);          
-    int codigo = data.substring(0, fin).toInt();
+    //NUEVO Procesar códigos
+    int fin = data.indexOf(' ', 0);
+    int codigo = 0;
     int inicio = fin + 1;
+
+    if (fin != -1) {
+      codigo = data.substring(0, fin).toInt();
+    } else {
+      codigo = data.toInt();
+    }
 
     if (codigo == 1) { // Código 1: Temperatura y Humedad
       fin = data.indexOf(' ', inicio);
@@ -76,14 +81,13 @@ void loop() {
       digitalWrite(led_fallo_datostemp, LOW);
     }
     else if (codigo == 2) { // Código 2: Distancia
-      fin = data.indexOf(' ', inicio);
-      if (fin == -1) fin = data.length();
-      distancia = data.substring(inicio, fin).toInt();
-
-    // Mostrar la distancia en consola
-      Serial.print("Distancia medida: ");
-      Serial.print(distancia);
-      Serial.println(" cm");
+      int fin2 = data.indexOf(' ', inicio);
+      int angulo = 0;
+      int dist = 0;
+      if (fin2 != -1) {
+        angulo = data.substring(inicio, fin2).toInt();
+        distancia = data.substring(fin2 + 1).toInt();
+      }
 
     // --- Detección de fallo del sensor ---
       if (distancia <= 0 || distancia > 400) {
@@ -91,10 +95,10 @@ void loop() {
           falloDistancia = true;
           digitalWrite(buzzer, HIGH);
           buzzer_on_time = millis() + buzzer_duration;
-          Serial.println("Fallo en el sensor de distancia");
         }
       } else {
         falloDistancia = false;
+        digitalWrite(buzzer, LOW);
       }
   }
     else if (codigo == 3) { // Código 3: Fallo DHT
