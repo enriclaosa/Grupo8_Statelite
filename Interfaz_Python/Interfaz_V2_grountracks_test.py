@@ -262,6 +262,7 @@ window.rowconfigure(6, weight=1)
 window.rowconfigure(7, weight=1)
 window.rowconfigure(8, weight=1)
 window.rowconfigure(9, weight=1)
+window.rowconfigure(10, weight=1)
 window.columnconfigure(0, weight=1)
 window.columnconfigure(1, weight=10)
 window.columnconfigure(2, weight=10)
@@ -290,37 +291,41 @@ CambiarOrientacionButton.grid(row=5, column=0, padx=5, pady=5, sticky=N+S+E+W)
 CambiarModoControlButton = Button(window, text="Cambiar modo control sensor", bg='pink', fg='black', command=CambiarModoControl)
 CambiarModoControlButton.grid(row=6, column=0, padx=5, pady=5, sticky=N+S+E+W)
 
+MostrarGroundtracksButton = Button(window, text="Mostrar Groundtracks", bg="lightblue", command=MostrarGroundtracks)
+MostrarGroundtracksButton.grid(row=7, column=0, padx=5, pady=5, sticky=N+S+E+W)
+
 #   GRÁFICAS
 # Temperatura
 GraficaFrame = Frame(window)
-GraficaFrame.grid(row=0, column=1, rowspan=7, padx=5, pady=5, sticky=N + S + E + W)
+GraficaFrame.grid(row=0, column=1, rowspan=8, padx=5, pady=5, sticky=N + S + E + W)
 fig, ax = plt.subplots(figsize=(6,4))
 canvas = FigureCanvasTkAgg(fig, master=GraficaFrame)
 canvas.get_tk_widget().pack(fill=BOTH, expand=1)
 #Groundtrack
 GroundtrackFrame = Frame(window)
-GroundtrackFrame.grid(row=0, column=2, rowspan=7, padx=5, pady=5, sticky=N+S+E+W)
+GroundtrackFrame.grid(row=0, column=2, rowspan=8, padx=5, pady=5, sticky=N+S+E+W)
 groundtrack_fig = plt.figure(figsize=(6,4))
 groundtrack_ax = groundtrack_fig.add_subplot(111)
 groundtrack_canvas = FigureCanvasTkAgg(groundtrack_fig, master=GroundtrackFrame)
 groundtrack_canvas.get_tk_widget().pack(fill=BOTH, expand=1)
 #Radar
 RadarFrame = Frame(window)
-RadarFrame.grid(row=0, column=2, rowspan=7, padx=5, pady=5, sticky=N + S + E + W)
+RadarFrame.grid(row=0, column=2, rowspan=8, padx=5, pady=5, sticky=N + S + E + W)
 fig_radar = plt.figure()
 ax_radar = fig_radar.add_subplot(111, projection='polar')
 canvas_radar = FigureCanvasTkAgg(fig_radar, master=RadarFrame)
 canvas_radar.get_tk_widget().pack(fill=BOTH, expand=1)
 
+#   INTRODUCCIÓN DATOS
 # Barra valor y mensaje debajo de la grafica
 MensajeVar = StringVar()
 MensajeLabel = Label(window, textvariable=MensajeVar, anchor=W)
-MensajeLabel.grid(row=7, column=0, columnspan = 3, padx=5, pady=2, sticky=N+S+E+W)
+MensajeLabel.grid(row=8, column=0, columnspan = 3, padx=5, pady=2, sticky=N+S+E+W)
 
 ValorEntry = Entry(window)
-ValorEntry.grid(row=8, column=0, columnspan = 3, padx=5, pady=2, sticky=N+S+E+W)
+ValorEntry.grid(row=9, column=0, columnspan = 3, padx=5, pady=2, sticky=N+S+E+W)
 
 EnviarButton = Button(window, text="Envia", bg="gray", command=EnviarValor)
-EnviarButton.grid(row=9, column=0, columnspan = 3, padx=5, pady=2, sticky=N+S+E+W)
+EnviarButton.grid(row=10, column=0, columnspan = 3, padx=5, pady=2, sticky=N+S+E+W)
 
 window.mainloop()
