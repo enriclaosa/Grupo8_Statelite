@@ -4,10 +4,10 @@ from tkinter import *
 from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg
 import threading
 import numpy as np
+import datetime
 
 device = 'COM5'  # Cambiar por el puerto correspondiente
 mySerial = serial.Serial(device, 9600, timeout=1)
-
 
 # Variables globales para guardar datos
 temperaturas = []
@@ -19,14 +19,88 @@ limite_alarma = 25.0  # Límite de temperatura para la alarma
 accion_actual = None
 angulos = []
 distancias = []
+DateTime = datetime.datetime.now()
+fecha_hora_actual = DateTime.strftime("%d-%m-%Y %H:%M")
+tipo = []
 
-def Reanudar():    # Envia el mensaje para reanudar el envio
-    mensaje = "Reanudar"
-    mySerial.write(mensaje.encode('utf-8'))
+def Iniciarclick():
+    global running, temperaturas, eje_x, i
+    if not running:
+        running = True
+        temperaturas.clear()
+        medias.clear()
+        eje_x.clear()
+        i = 0
+        update_plot()
+    RegistrarEvento("Comando:", "iniciar graficas")
 
 def Parar():   # Envia el mensaje para detener el envio
     mensaje = "Parar"
     mySerial.write(mensaje.encode('utf-8'))
+    RegistrarEvento("Comando:", "parar transmision de datos")
+
+def Reanudar():    # Envia el mensaje para reanudar el envio
+    mensaje = "Reanudar"
+    mySerial.write(mensaje.encode('utf-8'))
+    RegistrarEvento("Comando:", "reanudar transmision de datos")
+
+def CambiarPeriodo():
+    global accion_actual
+    accion_actual = "periodo"
+    MensajeVar.set("Escribe el nuevo periodo de transmision (segundos):")
+    ValorEntry.delete(0, END)
+    RegistrarEvento("Comando:", "cambiar periodo de transmisión de datos")
+
+def CambiarValorMaxTemp():
+    global accion_actual
+    accion_actual = "ValorTempMax"
+    MensajeVar.set("Escribe el valor máximo de la temperatura (grados centígrados):")
+    ValorEntry.delete(0,END)
+    RegistrarEvento("Comando:", "cambiar valor maximo de la temperatura")
+
+def CambiarOrientacion():
+    global accion_actual
+    accion_actual = "orientacion"
+    MensajeVar.set("Escribe la nueva orientacion del sensor (grados):")
+    ValorEntry.delete(0, END)
+    RegistrarEvento("Comando:", "cambiar orientacion del sensor")
+
+def CambiarModoControl():
+    mensaje = "Cambio"
+    mySerial.write(mensaje.encode('utf-8'))
+
+def EscribirObservacion():
+    global accion_actual
+    accion_actual = "observacion"
+    MensajeVar.set("Escribe la observacion deseada:")
+    ValorEntry.delete(0, END)
+
+def EnviarValor():
+    valor = ValorEntry.get()
+    if accion_actual == "periodo":
+        mensaje = f"4 {valor}\n"
+        mySerial.write(mensaje.encode('utf-8'))
+    elif accion_actual == "orientacion":
+        try:
+            valor_int = int(valor)
+            if valor_int == -1 or (0 <= valor_int <= 180):
+                mensaje = f"2 {valor_int}\n"
+                mySerial.write(mensaje.encode('utf-8'))
+        except ValueError:
+            MensajeVar.set("Introduce un número válido")
+            return
+    elif accion_actual == "ValorTempMax":
+        limite_alarma = valor
+    elif accion_actual == "observacion":
+        RegistrarEvento("Observacion:", "{}".format(valor))
+
+    # Despues de enviar, vacia la barra y el mensaje
+    MensajeVar.set("")
+    ValorEntry.delete(0, END)
+
+def RegistrarEvento(tipo, mensaje):
+    with open("registro_eventos.txt", "a") as f:
+        f.write("{} {} {}\n".format(fecha_hora_actual, tipo, mensaje))
 
 def update_plot():
     global i, running
@@ -54,7 +128,7 @@ def update_plot():
                     # detección de alarma
                     if len(medias) >= 3:
                         if medias[-1] > limite_alarma and medias[-2] > limite_alarma and medias[-3] > limite_alarma:
-                            print("Tres medias consecutivas por encima del límite!")
+                            RegistrarEvento("Alarma:", "tres medias de temperatura consecutivas por encima del límite!")
                 except ValueError:
                     # Si no se puede convertir, ignorar la línea
                     pass
@@ -66,10 +140,11 @@ def update_plot():
                     distancias.append(distancia)
                 except ValueError:
                     pass
+                
         # Limitamos a últimos 5 datos
         angulos[:] = angulos[-5:]  # Limit 5 últims
         distancias[:] = distancias[-5:]  # Limit 5 últims
-        
+
         ax.clear()
         ax.set_xlim(0, max(100, i))
         ax.set_ylim(20, 30)  # Limites de temperatura
@@ -100,65 +175,7 @@ def update_plot():
         # Llama a sí mismo después de 500 ms para actualizar la gráfica
         window.after(500, update_plot)
 
-def Iniciarclick():
-    global running, temperaturas, eje_x, i
-    if not running:
-        running = True
-        temperaturas.clear()
-        medias.clear()
-        eje_x.clear()
-        i = 0
-        update_plot()
-
-def Detenerclick():
-    global running
-    running = False
-
-def CambiarPeriodo():
-    global accion_actual
-    accion_actual = "periodo"
-    MensajeVar.set("Escribe el nuevo periodo de transmision (segundos):")
-    ValorEntry.delete(0, END)
-
-def CambiarOrientacion():
-    global accion_actual
-    accion_actual = "orientacion"
-    MensajeVar.set("Escribe la nueva orientacion del sensor (grados):")
-    ValorEntry.delete(0, END)
-
-def CambiarValorMaxTemp():
-    global accion_actual
-    accion_actual = "ValorTempMax"
-    MensajeVar.set("Escribe el valor máximo de la temperatura (grados centígrados):")
-    ValorEntry.delete(0,END)
-
-def CambiarModoControl():
-    mensaje = "Cambio"
-    mySerial.write(mensaje.encode('utf-8'))
-
-def EnviarValor():
-    valor = ValorEntry.get()
-    if accion_actual == "periodo":
-        mensaje = f"4 {valor}\n"
-        mySerial.write(mensaje.encode('utf-8'))
-    elif accion_actual == "orientacion":
-        try:
-            valor_int = int(valor)
-            if valor_int == -1 or (0 <= valor_int <= 180):
-                mensaje = f"2 {valor_int}\n"
-                mySerial.write(mensaje.encode('utf-8'))
-        except ValueError:
-            MensajeVar.set("Introduce un número válido")
-            return
-    elif accion_actual == "ValorTempMax":
-        limite_alarma = valor
-
-    # Despues de enviar, vacia la barra y el mensaje
-    MensajeVar.set("")
-    ValorEntry.delete(0, END)
-
 # INTERFAZ
-
 window = Tk()
 window.geometry("1400x800")
 window.rowconfigure(0, weight=1)
@@ -171,6 +188,7 @@ window.rowconfigure(6, weight=1)
 window.rowconfigure(7, weight=1)
 window.rowconfigure(8, weight=1)
 window.rowconfigure(9, weight=1)
+window.rowconfigure(10, weight=1)
 window.columnconfigure(0, weight=1)
 window.columnconfigure(1, weight=10)
 window.columnconfigure(2, weight=10)
@@ -197,15 +215,18 @@ CambiarOrientacionButton.grid(row=5, column=0, padx=5, pady=5, sticky=N+S+E+W)
 CambiarModoControlButton = Button(window, text="Cambiar modo control sensor", bg='pink', fg='black', command=CambiarModoControl)
 CambiarModoControlButton.grid(row=6, column=0, padx=5, pady=5, sticky=N+S+E+W)
 
+EscribirObservacionButton = Button(window, text="Enviar observacion", bg='black', fg='white', command=EscribirObservacion)
+EscribirObservacionButton.grid(row=7, column=0, padx=5, pady=5, sticky=N+S+E+W)
+
 GraficaFrame = Frame(window)
-GraficaFrame.grid(row=0, column=1, rowspan=7, padx=5, pady=5, sticky=N + S + E + W)
+GraficaFrame.grid(row=0, column=1, rowspan=8, padx=5, pady=5, sticky=N + S + E + W)
 
 fig, ax = plt.subplots(figsize=(6,4))
 canvas = FigureCanvasTkAgg(fig, master=GraficaFrame)
 canvas.get_tk_widget().pack(fill=BOTH, expand=1)
 
 RadarFrame = Frame(window)
-RadarFrame.grid(row=0, column=2, rowspan=7, padx=5, pady=5, sticky=N + S + E + W)
+RadarFrame.grid(row=0, column=2, rowspan=8, padx=5, pady=5, sticky=N + S + E + W)
 fig_radar = plt.figure()
 ax_radar = fig_radar.add_subplot(111, projection='polar')
 canvas_radar = FigureCanvasTkAgg(fig_radar, master=RadarFrame)
@@ -214,12 +235,12 @@ canvas_radar.get_tk_widget().pack(fill=BOTH, expand=1)
 # Barra valor y mensaje debajo de la grafica
 MensajeVar = StringVar()
 MensajeLabel = Label(window, textvariable=MensajeVar, anchor=W)
-MensajeLabel.grid(row=7, column=0, columnspan = 3, padx=5, pady=2, sticky=N+S+E+W)
+MensajeLabel.grid(row=8, column=0, columnspan = 3, padx=5, pady=2, sticky=N+S+E+W)
 
 ValorEntry = Entry(window)
-ValorEntry.grid(row=8, column=0, columnspan = 3, padx=5, pady=2, sticky=N+S+E+W)
+ValorEntry.grid(row=9, column=0, columnspan = 3, padx=5, pady=2, sticky=N+S+E+W)
 
 EnviarButton = Button(window, text="Envia", bg="gray", command=EnviarValor)
-EnviarButton.grid(row=9, column=0, columnspan = 3, padx=5, pady=2, sticky=N+S+E+W)
+EnviarButton.grid(row=10, column=0, columnspan = 3, padx=5, pady=2, sticky=N+S+E+W)
 
 window.mainloop()
