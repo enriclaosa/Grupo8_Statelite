@@ -1,0 +1,27 @@
+def checksum(mensaje):
+    suma = 0
+    for i in mensaje:
+        suma = suma+ord(i)
+    suma = suma % 256
+    return suma
+
+def Comprueva(frase,respuesta):
+    suma = 0
+    for i in frase:
+        suma = suma+ord(i)
+    suma = suma%256
+    if suma == respuesta:
+        return 1
+    else:
+        return 0
+
+def main():
+    frase = "Hola mundo!"
+    respuesta = checksum(frase)
+    print(f"{frase}|{respuesta}")
+    respuesta2 = Comprueva(frase,respuesta)
+    if respuesta2 ==1:
+        print("El cheksum coincide")
+    else:
+        print("El cheksum no coincide")
+main()
