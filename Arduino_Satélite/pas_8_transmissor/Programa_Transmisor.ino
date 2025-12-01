@@ -38,6 +38,14 @@ const unsigned long intervaloDistancia = 200; // 200ms entre medidas
 unsigned long nextMedidaDistancia = 0;
 int ultimaDistanciaEnviada = -2;
 
+//cheksum 
+String ConChecksum(String mensaje) {
+  int checksum = 0;
+  for (int i = 0; i < mensaje.length(); i++) {
+    checksum += mensaje[i];
+  }
+  return mensaje + "|" + String(checksum);
+}
 
 String mensaje;
 
@@ -159,14 +167,11 @@ if (mySerial.available() > 0) {
         else {
         esperandoTimeout = false;
         digitalWrite(LedVerd, HIGH);
-        mySerial.print("1 ");
-        mySerial.print(h);
-        mySerial.print(" ");
-        mySerial.println(t);
-        mySerial.print("2 ");
-        mySerial.print(angulo);
-        mySerial.print(" ");
-        mySerial.println(distancia);
+        String linea1 = "1 " + String(h) + " " + String(t);
+        mySerial.println(ConChecksum(linea1));
+        String linea2 = "2 " + String(angulo) + " " + String(distancia);
+        mySerial.println(ConChecksum(linea2));
+
         nextLedRojo = millis() + intervalLedRojo;
         }
         nextHT = millis() + intervalHT;
