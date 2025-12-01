@@ -68,7 +68,7 @@ void loop() {
   if (mySerial.available()) {
     String ConChecksum = mySerial.readStringUntil('\n');
     String data; // Leer hasta salto de línea
-    Serial.println(ConChecksum);
+    Serial.println(data); // O Checksum??
 
      if (!comprobarChecksum(ConChecksum, data)) {
         Serial.println("ERROR: checksum incorrecto, descartado");
