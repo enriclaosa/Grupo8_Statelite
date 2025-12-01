@@ -23,6 +23,22 @@ bool falloDistancia = false;
 unsigned long buzzer_on_time = 0;          // para limitar duración del pitido
 const unsigned long buzzer_duration = 500; // 0.5 s
 
+//checksum
+bool comprobarChecksum(String ConChecksum, String &dataSinChecksum) {
+  int separador = ConChecksum.indexOf('|');
+
+  if (separador == -1) return false;   // No hay checksum
+  dataSinChecksum = ConChecksum.substring(0, separador);
+
+  int recibido = ConChecksum.substring(separador + 1).toInt();
+  int calculado = 0;
+  for (int i = 0; i < dataSinChecksum.length(); i++) {
+    calculado += dataSinChecksum[i];
+  }
+  return calculado == recibido;
+}
+
+
 void setup() {
   Serial.begin(9600);
   mySerial.begin(9600);
@@ -50,9 +66,14 @@ void loop() {
   }
 
   if (mySerial.available()) {
-    String data = mySerial.readStringUntil('\n'); // Leer hasta salto de línea
-    Serial.println(data);
+    String ConChecksum = mySerial.readStringUntil('\n');
+    String data; // Leer hasta salto de línea
+    Serial.println(ConChecksum);
 
+     if (!comprobarChecksum(ConChecksum, data)) {
+        Serial.println("ERROR: checksum incorrecto, descartado");
+        return;
+     }
     last_message_time = millis(); // Actualizar tiempo de último mensaje
 
     //NUEVO Procesar códigos
@@ -100,11 +121,11 @@ void loop() {
         falloDistancia = false;
         digitalWrite(buzzer, LOW);
       }
-  }
-    else if (codigo == 3) { // Código 3: Fallo DHT
-      falloDHT = true;
-      digitalWrite(led_fallo_datostemp, HIGH);
     }
+      else if (codigo == 3) { // Código 3: Fallo DHT
+        falloDHT = true;
+        digitalWrite(led_fallo_datostemp, HIGH);
+      }
     else {
     // Verificar palabra "Fallo" en la cadena recibida (case sensitive)
     if (data.indexOf("Fallo") >= 0) {
