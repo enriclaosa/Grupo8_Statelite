@@ -302,14 +302,14 @@ MediaButton.grid(row=9, column=0, padx=5, pady=5, sticky=N+S+E+W)
 
 
 GraficaFrame = Frame(window)
-GraficaFrame.grid(row=0, column=1, rowspan=9, padx=5, pady=5, sticky=N + S + E + W)
+GraficaFrame.grid(row=0, column=1, rowspan=10, padx=5, pady=5, sticky=N + S + E + W)
 
 fig, ax = plt.subplots(figsize=(6,4))
 canvas = FigureCanvasTkAgg(fig, master=GraficaFrame)
 canvas.get_tk_widget().pack(fill=BOTH, expand=1)
 
 RadarFrame = Frame(window)
-RadarFrame.grid(row=0, column=2, rowspan=9, padx=5, pady=5, sticky=N + S + E + W)
+RadarFrame.grid(row=0, column=2, rowspan=10, padx=5, pady=5, sticky=N + S + E + W)
 fig_radar = plt.figure()
 ax_radar = fig_radar.add_subplot(111, projection='polar')
 canvas_radar = FigureCanvasTkAgg(fig_radar, master=RadarFrame)
@@ -318,13 +318,13 @@ canvas_radar.get_tk_widget().pack(fill=BOTH, expand=1)
 
 MensajeVar = StringVar()
 MensajeLabel = Label(window, textvariable=MensajeVar, anchor=W)
-MensajeLabel.grid(row=9, column=0, columnspan = 3, padx=5, pady=2, sticky=N+S+E+W)
+MensajeLabel.grid(row=10, column=0, columnspan = 3, padx=5, pady=2, sticky=N+S+E+W)
 
 ValorEntry = Entry(window)
-ValorEntry.grid(row=10, column=0, columnspan = 3, padx=5, pady=2, sticky=N+S+E+W)
+ValorEntry.grid(row=11, column=0, columnspan = 3, padx=5, pady=2, sticky=N+S+E+W)
 
 EnviarButton = Button(window, text="Envia", bg="gray", command=EnviarValor)
-EnviarButton.grid(row=11, column=0, columnspan = 3, padx=5, pady=2, sticky=N+S+E+W)
+EnviarButton.grid(row=12, column=0, columnspan = 3, padx=5, pady=2, sticky=N+S+E+W)
 
 
 window.mainloop()
