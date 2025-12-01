@@ -128,7 +128,7 @@ def update_plot():
                     # detección de alarma
                     if len(medias) >= 3:
                         if medias[-1] > limite_alarma and medias[-2] > limite_alarma and medias[-3] > limite_alarma:
-                            RegistrarEvento("Alarma:", "tres medias de temperatura consecutivas por encima del límite!")
+                            RegistrarEvento("Alarma:", "tres medias de temperatura consecutivas por encima del limite!")
                 except ValueError:
                     # Si no se puede convertir, ignorar la línea
                     pass
