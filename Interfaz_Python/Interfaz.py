@@ -5,6 +5,7 @@ from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg
 import threading
 import numpy as np
 import datetime
+from tkinter.scrolledtext import ScrolledText
 
 device = 'COM5'  # Cambiar por el puerto correspondiente
 mySerial = serial.Serial(device, 9600, timeout=1)
@@ -99,8 +100,71 @@ def EnviarValor():
     ValorEntry.delete(0, END)
 
 def RegistrarEvento(tipo, mensaje):
-    with open("registro_eventos.txt", "a") as f:
+    with open("registro_eventos.txt", "a", encoding="utf-8") as f:
         f.write("{} {} {}\n".format(fecha_hora_actual, tipo, mensaje))
+
+def MostrarRegistro():
+    def aplicar_filtros():
+        fecha_filtro = entry_data.get().strip()
+        tipo_filtro = tipo_var.get()
+
+        resultado = []
+
+        try:
+            with open("registro_eventos.txt", "r", encoding="utf-8") as f:
+                lineas = f.readlines()
+        except FileNotFoundError:
+            text_area.config(state="normal")
+            text_area.delete("1.0", END)
+            text_area.insert("1.0", "El fichero no existe.")
+            text_area.config(state="disabled")
+            return
+
+        for linea in lineas:
+            # Filtro por fecha
+            if fecha_filtro:
+                if not linea.startswith(fecha_filtro):
+                    continue
+
+            # Filtro per tipo
+            if tipo_filtro != "Cualquiera":
+                if f"{tipo_filtro}:" not in linea:
+                    continue
+
+            resultado.append(linea)
+
+        # Mostrar resultado
+        text_area.config(state="normal")
+        text_area.delete("1.0", END)
+
+        if resultado:
+            text_area.insert("1.0", "".join(resultado))
+        else:
+            text_area.insert("1.0", "No hay resultados.")
+
+        text_area.config(state="disabled")
+
+    RegistroWindow = Toplevel(window)
+    RegistroWindow.title("Registro filtrado")
+
+    filtros_frame = Frame(RegistroWindow)
+    filtros_frame.pack(pady=5, padx=5, fill="x")
+
+    Label(filtros_frame, text="Fecha (dd-mm-yyyy):").grid(row=0, column=0, padx=5)
+    entry_data = Entry(filtros_frame)
+    entry_data.grid(row=0, column=1, padx=5)
+
+    Label(filtros_frame, text="tipo de evento:").grid(row=0, column=2, padx=5)
+    tipo_var = StringVar()
+    tipo_var.set("Cualquiera")
+    menu_tipo = OptionMenu(filtros_frame, tipo_var, "Cualquiera", "Comando", "Alarma", "Observacion")
+    menu_tipo.grid(row=0, column=3, padx=5)
+
+    Button(filtros_frame, text="Aplicar filtros", command=aplicar_filtros).grid(row=0, column=4, padx=5)
+
+    text_area = ScrolledText(RegistroWindow, width=100, height=30)
+    text_area.pack(expand=True, fill="both")
+    text_area.config(state="disabled")
 
 def update_plot():
     global i, running
@@ -130,7 +194,6 @@ def update_plot():
                         if medias[-1] > limite_alarma and medias[-2] > limite_alarma and medias[-3] > limite_alarma:
                             RegistrarEvento("Alarma:", "tres medias de temperatura consecutivas por encima del limite!")
                 except ValueError:
-                    # Si no se puede convertir, ignorar la línea
                     pass
             if codigo == 2 and len(temp) >= 3:
                 try:
@@ -141,13 +204,12 @@ def update_plot():
                 except ValueError:
                     pass
                 
-        # Limitamos a últimos 5 datos
-        angulos[:] = angulos[-5:]  # Limit 5 últims
-        distancias[:] = distancias[-5:]  # Limit 5 últims
+        angulos[:] = angulos[-5:]
+        distancias[:] = distancias[-5:]
 
         ax.clear()
         ax.set_xlim(0, max(100, i))
-        ax.set_ylim(20, 30)  # Limites de temperatura
+        ax.set_ylim(15, 25)
         ax.plot(eje_x, temperaturas, label='Temperatura')
         ax.plot(eje_x, medias, label='Media últimos 10', color='orange')
         ax.set_title('Temperatura y media en tiempo real')
@@ -166,14 +228,15 @@ def update_plot():
         ax_radar.set_xticks(np.deg2rad(np.arange(0, 181, 20)))
         ax_radar.set_xticklabels([f"{int(x)}°" for x in np.arange(0, 181, 20)])
         if len(angulos) > 1:
-            radianes = np.deg2rad(np.array(angulos))  # convertir grados a radianes
+            radianes = np.deg2rad(np.array(angulos))
             ax_radar.plot(radianes, distancias, color="yellow") 
             ax_radar.plot([radianes[-1]], [distancias[-1]], "go", markersize=10)
             ax_radar.plot([0, radianes[-1]], [0, distancias[-1]], "g")
         canvas_radar.draw()
 
-        # Llama a sí mismo después de 500 ms para actualizar la gráfica
         window.after(500, update_plot)
+
+
 
 # INTERFAZ
 window = Tk()
@@ -189,11 +252,13 @@ window.rowconfigure(7, weight=1)
 window.rowconfigure(8, weight=1)
 window.rowconfigure(9, weight=1)
 window.rowconfigure(10, weight=1)
+window.rowconfigure(11, weight=1)
+window.rowconfigure(12, weight=1)
 window.columnconfigure(0, weight=1)
 window.columnconfigure(1, weight=10)
 window.columnconfigure(2, weight=10)
 
-# Elementos de la interfaz
+
 IniciarButton = Button(window, text="Iniciar gráfica temp", bg='green', fg="black", command=Iniciarclick)
 IniciarButton.grid(row=0, column=0, padx=5, pady=5, sticky=N + S + E + W)
 
@@ -218,29 +283,34 @@ CambiarModoControlButton.grid(row=6, column=0, padx=5, pady=5, sticky=N+S+E+W)
 EscribirObservacionButton = Button(window, text="Enviar observacion", bg='black', fg='white', command=EscribirObservacion)
 EscribirObservacionButton.grid(row=7, column=0, padx=5, pady=5, sticky=N+S+E+W)
 
+MostrarRegistreButton = Button(window, text="Mostrar registro de eventos",bg='lightgray', fg='black', command=MostrarRegistro)
+MostrarRegistreButton.grid(row=8, column=0, padx=5, pady=5, sticky=N+S+E+W)
+
+
 GraficaFrame = Frame(window)
-GraficaFrame.grid(row=0, column=1, rowspan=8, padx=5, pady=5, sticky=N + S + E + W)
+GraficaFrame.grid(row=0, column=1, rowspan=9, padx=5, pady=5, sticky=N + S + E + W)
 
 fig, ax = plt.subplots(figsize=(6,4))
 canvas = FigureCanvasTkAgg(fig, master=GraficaFrame)
 canvas.get_tk_widget().pack(fill=BOTH, expand=1)
 
 RadarFrame = Frame(window)
-RadarFrame.grid(row=0, column=2, rowspan=8, padx=5, pady=5, sticky=N + S + E + W)
+RadarFrame.grid(row=0, column=2, rowspan=9, padx=5, pady=5, sticky=N + S + E + W)
 fig_radar = plt.figure()
 ax_radar = fig_radar.add_subplot(111, projection='polar')
 canvas_radar = FigureCanvasTkAgg(fig_radar, master=RadarFrame)
 canvas_radar.get_tk_widget().pack(fill=BOTH, expand=1)
 
-# Barra valor y mensaje debajo de la grafica
+
 MensajeVar = StringVar()
 MensajeLabel = Label(window, textvariable=MensajeVar, anchor=W)
-MensajeLabel.grid(row=8, column=0, columnspan = 3, padx=5, pady=2, sticky=N+S+E+W)
+MensajeLabel.grid(row=9, column=0, columnspan = 3, padx=5, pady=2, sticky=N+S+E+W)
 
 ValorEntry = Entry(window)
-ValorEntry.grid(row=9, column=0, columnspan = 3, padx=5, pady=2, sticky=N+S+E+W)
+ValorEntry.grid(row=10, column=0, columnspan = 3, padx=5, pady=2, sticky=N+S+E+W)
 
 EnviarButton = Button(window, text="Envia", bg="gray", command=EnviarValor)
-EnviarButton.grid(row=10, column=0, columnspan = 3, padx=5, pady=2, sticky=N+S+E+W)
+EnviarButton.grid(row=11, column=0, columnspan = 3, padx=5, pady=2, sticky=N+S+E+W)
+
 
 window.mainloop()
