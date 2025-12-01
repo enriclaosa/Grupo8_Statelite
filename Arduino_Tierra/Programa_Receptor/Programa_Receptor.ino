@@ -38,6 +38,15 @@ bool comprobarChecksum(String ConChecksum, String &dataSinChecksum) {
   return calculado == recibido;
 }
 
+// Medias tempratura
+#define MAX_MEDIAS 10
+float ultimasTemperaturas[MAX_MEDIAS]; // para las últimas 10 temperaturas
+int indiceTemp = 0;                    // para que vuelva a 1 cuando este a 10 
+int contadorTemp = 0;                   
+float mediaTemperaturas = 0;
+
+bool activarMediaEnArduino = true;
+
 
 void setup() {
   Serial.begin(9600);
@@ -59,8 +68,9 @@ void setup() {
 }
 
 void loop() {
-  if (Serial.available()) {
-    String mensaje = Serial.readStringUntil('\n');
+  String mensaje = "";
+  if (Serial.available()){
+    mensaje = Serial.readStringUntil('\n');
     mensaje.trim();
     mySerial.println(mensaje);
   }
@@ -68,7 +78,7 @@ void loop() {
   if (mySerial.available()) {
     String ConChecksum = mySerial.readStringUntil('\n');
     String data; // Leer hasta salto de línea
-    Serial.println(data); // O Checksum??
+    Serial.println(data); // O ConChecksum??
 
      if (!comprobarChecksum(ConChecksum, data)) {
         Serial.println("ERROR: checksum incorrecto, descartado");
@@ -96,11 +106,39 @@ void loop() {
       humedad = humStr.toFloat();
       falloDHT = false;
 
+    //Media teperaturas!
+    if (mensaje == "MEDIA_ON") {
+        activarMediaEnArduino = true;
+    } 
+    else if (mensaje == "MEDIA_OFF") {
+        activarMediaEnArduino = false;
+    }
+    if(activarMediaEnArduino){
+      ultimasTemperaturas[indiceTemp] = temperatura;
+      indiceTemp = (indiceTemp + 1) % MAX_MEDIAS;
+      if (contadorTemp < MAX_MEDIAS) contadorTemp++;
+
+      float suma = 0;
+      for (int i = 0; i < contadorTemp; i++) {
+          suma += ultimasTemperaturas[i];
+      }
+      mediaTemperaturas = suma / contadorTemp;
+      Serial.print("Temperatura: "); Serial.print(temperatura);
+      Serial.print(" °C, Media últimas "); Serial.print(contadorTemp);
+      Serial.print(": "); Serial.println(mediaTemperaturas);
+      }
+
+    digitalWrite(led_rec, HIGH);
+    led_rec_on = true;
+    led_rec_off_time = millis() + led_on_interval;
+    digitalWrite(led_fallo_datostemp, LOW);
+
       digitalWrite(led_rec, HIGH);  // LED recepción datos on (igual que antes)
       led_rec_on = true;
       led_rec_off_time = millis() + led_on_interval;
       digitalWrite(led_fallo_datostemp, LOW);
     }
+    
     else if (codigo == 2) { // Código 2: Distancia
       int fin2 = data.indexOf(' ', inicio);
       int angulo = 0;
@@ -109,7 +147,8 @@ void loop() {
         angulo = data.substring(inicio, fin2).toInt();
         distancia = data.substring(fin2 + 1).toInt();
       }
-
+    }
+  
     // --- Detección de fallo del sensor ---
       if (distancia <= 0 || distancia > 400) {
         if (!falloDistancia) {
@@ -117,12 +156,12 @@ void loop() {
           digitalWrite(buzzer, HIGH);
           buzzer_on_time = millis() + buzzer_duration;
         }
-      } else {
+       else {
         falloDistancia = false;
         digitalWrite(buzzer, LOW);
+        }
       }
-    }
-      else if (codigo == 3) { // Código 3: Fallo DHT
+    else if (codigo == 3) { // Código 3: Fallo DHT
         falloDHT = true;
         digitalWrite(led_fallo_datostemp, HIGH);
       }
@@ -138,7 +177,7 @@ void loop() {
       led_rec_off_time = millis() + led_on_interval;
       }
     }
-  }
+  
   // Apagar LED recepción después del intervalo
   if (led_rec_on && millis() >= led_rec_off_time && digitalRead(led_fallo_datostemp) == LOW) {
     digitalWrite(led_rec, LOW);
@@ -151,4 +190,5 @@ void loop() {
   } else {
     digitalWrite(led_timeout, LOW);
   }
+}
 }
