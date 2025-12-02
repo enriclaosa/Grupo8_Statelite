@@ -1,14 +1,12 @@
 import serial
 import matplotlib.pyplot as plt
 from tkinter import *
-from matplotlib.backends.backend_tkagg import FigureCanvasTkAggimport serial
-import matplotlib.pyplot as plt
-from tkinter import *
 from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg
 import numpy as np
 import datetime
 from tkinter.scrolledtext import ScrolledText
 import matplotlib
+import threading
 
 # CONFIG SERIAL
 
@@ -268,27 +266,34 @@ def update_plot():
                 except:
                     pass
 
-        # Recorte radar
         angulos[:] = angulos[-5:]
         distancias[:] = distancias[-5:]
 
-        # ---- ACTUALIZAR GRAFICA TEMP ----
         ax_temp.clear()
+        ax_temp.set_xlim(0, max(100, i))
+        ax_temp.set_ylim(15, 25)
         ax_temp.plot(eje_x, temperaturas, label='Temperatura')
-        ax_temp.plot(eje_x, medias, label='Media 10')
+        ax_temp.plot(eje_x, medias, label='Media últimos 10', color='orange')
+        ax_temp.set_title('Temperatura y media en tiempo real')
+        ax_temp.set_xlabel('Muestras')
+        ax_temp.set_ylabel('Temperatura (°C)')
         ax_temp.legend()
         canvas_temp.draw()
 
-        # ---- ACTUALIZAR RADAR ----
         ax_radar.clear()
+        ax_radar.set_title('Radar de Ultrasonidos')
         ax_radar.set_thetamin(0)
         ax_radar.set_thetamax(180)
-
+        ax_radar.set_xlabel('Distancia (cm)', labelpad=-50)
+        ax_radar.set_ylabel('Orientación sensor (grados)', labelpad=25)
+        ax_radar.set_ylim(0, 100)
+        ax_radar.set_xticks(np.deg2rad(np.arange(0, 181, 20)))
+        ax_radar.set_xticklabels([f"{int(x)}°" for x in np.arange(0, 181, 20)])
         if len(angulos) > 1:
-            rad = np.deg2rad(np.array(angulos))
-            ax_radar.plot(rad, distancias)
-            ax_radar.plot([rad[-1]], [distancias[-1]], "go")
-
+            radianes = np.deg2rad(np.array(angulos))
+            ax_radar.plot(radianes, distancias, color="yellow") 
+            ax_radar.plot([radianes[-1]], [distancias[-1]], "go", markersize=10)
+            ax_radar.plot([0, radianes[-1]], [0, distancias[-1]], "g")
         canvas_radar.draw()
 
         window.after(500, update_plot)
