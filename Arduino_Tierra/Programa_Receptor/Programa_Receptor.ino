@@ -45,7 +45,7 @@ int indiceTemp = 0;                    // para que vuelva a 1 cuando este a 10
 int contadorTemp = 0;                   
 float mediaTemperaturas = 0;
 
-bool activarMediaEnArduino = true;
+bool activarMediaEnArduino = false;
 
 
 void setup() {
