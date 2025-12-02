@@ -167,9 +167,9 @@ if (mySerial.available() > 0) {
         else {
         esperandoTimeout = false;
         digitalWrite(LedVerd, HIGH);
-        String linea1 = "1 " + String(h) + " " + String(t);
+        String linea1 = "1 " + String(h) + " " + String(t) + " ";
         mySerial.println(ConChecksum(linea1));
-        String linea2 = "2 " + String(angulo) + " " + String(distancia);
+        String linea2 = "2 " + String(angulo) + " " + String(distancia) + " ";
         mySerial.println(ConChecksum(linea2));
 
         nextLedRojo = millis() + intervalLedRojo;
