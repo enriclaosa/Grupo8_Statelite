@@ -209,9 +209,7 @@ def update_plot():
             linea = mySerial.readline().decode().strip()
             if not linea:
                 continue
-
             temp = linea.split(" ")
-
             try:
                 codigo = int(temp[0])
             except:
@@ -338,20 +336,20 @@ GrafFrame = Frame(window)
 GrafFrame.grid(row=0, column=1, rowspan=10, sticky="nsew")
 fig_temp, ax_temp = plt.subplots(figsize=(6,4))
 canvas_temp = FigureCanvasTkAgg(fig_temp, master=GrafFrame)
-canvas_temp.get_tk_widget().pack(fill='both', expand=True)
+canvas_temp.get_tk_widget().pack(fill=BOTH, expand=1)
 
 # RADAR
 RadarFrame = Frame(window)
 RadarFrame.grid(row=0, column=2, rowspan=10, sticky="nsew")
 fig_rad, ax_radar = plt.subplots(subplot_kw={"projection": "polar"})
 canvas_radar = FigureCanvasTkAgg(fig_rad, master=RadarFrame)
-canvas_radar.get_tk_widget().pack(fill='both', expand=True)
+canvas_radar.get_tk_widget().pack(fill=BOTH, expand=1)
 
 # GROUNDTRACK
 GTFrame = Frame(window)
 GTFrame.grid(row=0, column=3, rowspan=10, sticky="nsew")
 canvas_gt = FigureCanvasTkAgg(fig_gt, master=GTFrame)
-canvas_gt.get_tk_widget().pack(fill='both', expand=True)
+canvas_gt.get_tk_widget().pack(fill=BOTH, expand=1)
 
 # ENTRADA DE TEXTO
 MensajeVar = StringVar()
