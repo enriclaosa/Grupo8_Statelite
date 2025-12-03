@@ -153,10 +153,7 @@ def MostrarRegistro():
             with open("registro_eventos.txt", "r", encoding="utf-8") as f:
                 lineas = f.readlines()
         except FileNotFoundError:
-            #text_area.config(state="normal")
-            #text_area.delete("1.0", END)
             text_area.insert("1.0", "El fichero no existe.")
-            #text_area.config(state="disabled")
             return
 
         for linea in lineas:
@@ -264,8 +261,7 @@ def update_plot():
                     earth_slice = draw_earth_slice(z)
                     ax_gt.add_artist(earth_slice)
 
-                    plt.draw()
-                    fig_gt.canvas.flush_events()
+                    canvas_GT.draw()
 
                 except:
                     pass
