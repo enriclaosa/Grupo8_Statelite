@@ -272,46 +272,29 @@ def MostrarRegistro():
         fecha_filtro = entry_data.get_date().strftime("%d-%m-%Y")
         tipo_filtro = tipo_var.get()
         resultado = []
+
         try:
             with open("registro_eventos.txt", "r", encoding="utf-8") as f:
                 lineas = f.readlines()
         except FileNotFoundError:
+            text_area.config(state="normal")
             text_area.insert("1.0", "El fichero no existe.")
+            text_area.config(state="disabled")
             return
 
         for linea in lineas:
-            linea = linea.strip()
-            if not linea:
+            if fecha_filtro and not linea.startswith(fecha_filtro):
                 continue
 
-            # Formato esperado: "dd-mm-YYYY HH:MM Tipo: mensaje..."
-            partes = linea.split(" ", 3)
-            if len(partes) < 3:
-                continue
-
-            fecha_linea = partes[0]
-
-            # Filtro por fecha (solo día/mes/año): igual que antes,
-            # si la fecha de la línea no coincide con la seleccionada, se descarta.
-            if fecha_filtro and fecha_linea != fecha_filtro:
-                continue
-
-            # Filtro por tipo: lo hacemos "a lo fecha", buscando el texto del tipo dentro de la línea,
-            # para que sea robusto ante cambios menores de formato.
             if tipo_filtro != "Cualquiera":
-                tipo_busqueda = f"{tipo_filtro}:"
-                if tipo_busqueda not in linea:
+                if f" {tipo_filtro} " not in linea:
                     continue
 
-            resultado.append(linea + "\n")
+            resultado.append(linea)
 
-        # Mostrar resultado
         text_area.config(state="normal")
         text_area.delete("1.0", END)
-        if resultado:
-            text_area.insert("1.0", "".join(resultado))
-        else:
-            text_area.insert("1.0", "No hay resultados.")
+        text_area.insert("1.0", "".join(resultado) if resultado else "No hay resultados.")
         text_area.config(state="disabled")
 
     RegistroWindow = Toplevel(window)
@@ -320,33 +303,34 @@ def MostrarRegistro():
     filtros_frame = ttk.Frame(RegistroWindow)
     filtros_frame.pack(pady=5, padx=5, fill="x")
 
-    ttk.Label(filtros_frame, text="Fecha (dd-mm-yyyy):").grid(row=0, column=0, padx=5)
+    ttk.Label(filtros_frame, text="Fecha:").grid(row=0, column=0, padx=5)
+
     entry_data = DateEntry(filtros_frame)
     entry_data.grid(row=0, column=1, padx=5)
 
     ttk.Label(filtros_frame, text="Tipo de evento:").grid(row=0, column=2, padx=5)
-    tipo_var = StringVar()
-    tipo_var.set("Cualquiera")
 
-    def on_cambio_tipo(_value):
-        aplicar_filtros()
-
+    tipo_var = StringVar(value="Cualquiera")
     menu_tipo = ttk.OptionMenu(
         filtros_frame,
         tipo_var,
         "Cualquiera",
-        "Cualquiera", "Comando", "Alarma", "Observacion",
-        command=on_cambio_tipo,
+        "Comando",
+        "Alarma",
+        "Observacion"
     )
     menu_tipo.grid(row=0, column=3, padx=5)
 
-    aplicar_btn = ttk.Button(filtros_frame, text="Aplicar filtros", command=aplicar_filtros)
+    aplicar_btn = ttk.Button(
+        filtros_frame,
+        text="Aplicar filtros",
+        command=aplicar_filtros
+    )
     aplicar_btn.grid(row=0, column=4, padx=5)
-    
 
     text_area = ScrolledText(RegistroWindow, width=100, height=30)
     text_area.pack(expand=True, fill="both")
-    text_area.config(state="disabled") 
+    text_area.config(state="disabled")
 
 
 # Función única para leer datos del puerto serial
