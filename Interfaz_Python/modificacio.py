@@ -285,26 +285,22 @@ def MostrarRegistro():
                 continue
 
             # Formato esperado: "dd-mm-YYYY HH:MM Tipo: mensaje..."
-            # Separar fecha, hora y tipo de evento de forma robusta
             partes = linea.split(" ", 3)
             if len(partes) < 3:
                 continue
 
             fecha_linea = partes[0]
-            # partes[1] es la hora (HH:MM)
-            tipo_linea = partes[2]  # debería ser "Comando:", "Alarma:", "Observacion:", etc.
 
-            # Filtro por fecha (solo día/mes/año). Si hay fecha seleccionada,
-            # comparamos solo contra la parte de fecha de la línea.
-            if fecha_filtro:
-                if fecha_linea != fecha_filtro:
-                    continue
+            # Filtro por fecha (solo día/mes/año): igual que antes,
+            # si la fecha de la línea no coincide con la seleccionada, se descarta.
+            if fecha_filtro and fecha_linea != fecha_filtro:
+                continue
 
-            # Filtro por tipo
+            # Filtro por tipo: lo hacemos "a lo fecha", buscando el texto del tipo dentro de la línea,
+            # para que sea robusto ante cambios menores de formato.
             if tipo_filtro != "Cualquiera":
-                # Componer el tipo con dos puntos para comparar con el fichero
                 tipo_busqueda = f"{tipo_filtro}:"
-                if tipo_linea != tipo_busqueda:
+                if tipo_busqueda not in linea:
                     continue
 
             resultado.append(linea + "\n")
