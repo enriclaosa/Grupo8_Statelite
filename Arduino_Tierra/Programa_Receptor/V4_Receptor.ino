@@ -24,6 +24,8 @@ unsigned long buzzer_on_time = 0;          // para limitar duración del pitido
 const unsigned long buzzer_duration = 1000; // 1 segundo de duración
 bool buzzer_active = false;                // Estado del buzzer
 
+const int segPins[7] = {2, 3, 4, 5, 6, 7, 8};
+
 // Función para activar el buzzer por 1 segundo
 void activarBuzzer() {
   digitalWrite(buzzer, HIGH);
@@ -89,6 +91,15 @@ void setup() {
   nextUpdate = MILLIS_BETWEEN_UPDATES;
   r = R_EARTH + ALTITUDE;
   real_orbital_period = 2 * PI * sqrt(pow(r, 3) / (G * M));
+  // Display amb un 8
+  for (int i = 0; i < 7; i++) {
+    pinMode(segPins[i], OUTPUT);
+  }
+
+  // Nombre 8 -> tots els segments ON
+  for (int i = 0; i < 7; i++) {
+    digitalWrite(segPins[i], HIGH);  // càtode comú: HIGH encén el segment
+  }
 }
 
 void loop() {
