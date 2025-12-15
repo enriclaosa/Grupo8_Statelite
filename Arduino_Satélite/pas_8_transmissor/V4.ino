@@ -24,8 +24,11 @@ Servo miServo;
 int angulo = 90;
 int direccion = 1;
 bool controlPython = false;
-const int joystickXPin = A0;   // pin del eje X del joystick
-bool controlJoystick = false;  // modo joystick
+const int joystickXPin = A0;        // pin del eje X del joystick
+const int joystickDeadzone = 40;    // zona muerta para evitar jitter
+const int joystickMinPaso = 2;      // cambio mínimo de ángulo para mover
+bool controlJoystick = false;       // modo joystick
+int ultimoAnguloJoystick = 90;      // último ángulo fijado por joystick (sticky)
 
 unsigned long ultimoBarrido = 0;
 const int pasoBarrido = 1;
@@ -105,8 +108,18 @@ void loop() {
 // --- Barrido automático del servo si Python no controla ---
 if (controlJoystick) {
     int lectura = analogRead(joystickXPin);
-    angulo = map(lectura, 0, 1023, 0, 180);
-    miServo.write(angulo);
+    int delta = abs(lectura - 512);
+
+    if (delta > joystickDeadzone) {
+      int nuevoAngulo = map(lectura, 0, 1023, 0, 180);
+      // sólo mover si el cambio es apreciable para evitar jitter
+      if (abs(nuevoAngulo - ultimoAnguloJoystick) >= joystickMinPaso) {
+        ultimoAnguloJoystick = nuevoAngulo;
+        angulo = nuevoAngulo;
+        miServo.write(angulo);
+      }
+    }
+    // sticky: si el joystick vuelve a la zona muerta, el servo se queda en último ángulo
   } else if (!controlPython) {
     // barrido automático
     if (millis() - ultimoBarrido >= intervaloBarrido) {
