@@ -5,7 +5,7 @@
 #define DHTTYPE DHT11
 DHT dht(DHTPIN, DHTTYPE);
 SoftwareSerial mySerial(10, 11); // RX, TX
-//#define LedVerd 6
+#define LedVerd 6
 unsigned long nextLedRojo;
 const unsigned long intervalLedRojo = 500;
 unsigned long nextHT;
@@ -45,6 +45,19 @@ int ultimaDistanciaEnviada = -2;
 
 const int segPins[7] = {2, 3, 4, 5, 6, 7, 8};
 
+void mostrar8() {
+  for (int i = 0; i < 7; i++) {
+    digitalWrite(segPins[i], LOW);   // engegar tots els segments
+  }
+}
+
+void apagarDisplay() {
+  for (int i = 0; i < 7; i++) {
+    digitalWrite(segPins[i], HIGH);  // apagar tots els segments
+  }
+}
+
+
 //cheksum 
 String ConChecksum(String mensaje) {
   int checksum = 0;
@@ -60,7 +73,7 @@ void setup() {
   mySerial.begin(9600);
   Serial.begin(9600);
   dht.begin();
-  //pinMode(LedVerd, OUTPUT);
+  pinMode(LedVerd, OUTPUT);
   nextLedRojo = millis() + intervalLedRojo;
   nextHT = millis() + intervalHT;
   nextTimeoutHT = millis() + intervalTimeoutHT;
@@ -73,13 +86,9 @@ void setup() {
   pinMode(echoPin, INPUT);
 
   for (int i = 0; i < 7; i++) {
-    pinMode(segPins[i], OUTPUT);
-  }
-
-  // Nombre 8 -> tots els segments ON
-  for (int i = 0; i < 7; i++) {
-    digitalWrite(segPins[i], HIGH);   // ànode comú: LOW encén el segment
-  }
+  pinMode(segPins[i], OUTPUT);
+  digitalWrite(segPins[i], HIGH);  // ànode comú: HIGH = apagat
+}
 }
 
 void loop() {  
@@ -195,10 +204,8 @@ if (controlJoystick) {
         }
         else {
         esperandoTimeout = false;
-        for (int i = 0; i < 7; i++) {
-          digitalWrite(segPins[i], LOW);   // ànode comú: LOW encén el segment
-        }
         //digitalWrite(LedVerd, HIGH);
+        mostrar8();
         String linea1 = "1 " + String(h) + " " + String(t) + " ";
         mySerial.println(ConChecksum(linea1));
         String linea2 = "2 " + String(angulo) + " " + String(distancia) + " ";
@@ -208,12 +215,9 @@ if (controlJoystick) {
         }
         nextHT = millis() + intervalHT;
     }
-    if (millis() >= nextLedRojo){
-      for (int i = 0; i < 7; i++) {
-        digitalWrite(segPins[i], HIGH);   // ànode comú: LOW encén el segment
-      }
-      //digitalWrite(LedVerd, LOW);
-    }
+    if (millis() >= nextLedRojo)
+        //digitalWrite(LedVerd, LOW);
+        mostrar8();
     if(esperandoTimeout && (millis() >= nextTimeoutHT)){
         mySerial.println("Fallo");
         esperandoTimeout = false;
