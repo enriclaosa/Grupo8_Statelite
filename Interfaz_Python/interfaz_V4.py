@@ -9,9 +9,20 @@ from tkinter.scrolledtext import ScrolledText
 import matplotlib
 import cartopy.crs as ccrs
 import cartopy.feature as cfeature
+from tkinter import ttk
+from tkcalendar import DateEntry
+
+# ç estilo global botones
+style = ttk.Style()
+style.theme_use('clam')  
+style.configure('TButton',
+                font=('Segoe UI', 10),
+                padding=6,
+                relief='flat')  # sin borde 3D
+
 
 # CONFIGURACIÓ SERIAL
-device = 'COM4'  # Canvia pel teu port
+device = 'COM5'  # Canvia pel teu port
 mySerial = serial.Serial(device, 9600, timeout=2)
 
 # VARIABLES GLOBALS
@@ -43,7 +54,7 @@ longitudes = []  # Lista de longitudes
 tiempo_inicio_orbita = None  # Tiempo de inicio para calcular rotación
 CARTOPY_AVAILABLE = True
 
-plt.ion()
+
 fig_gt = plt.Figure(figsize=(8, 6))
 
 # Función para convertir coordenadas cartesianas (x, y, z) a latitud y longitud
@@ -130,7 +141,7 @@ else:
     # Crear un mapa básico con proyección simple
     # Dibujar "Tierra" como círculo
     earth_circle = plt.Circle((0, 0), 1, color='lightblue', alpha=0.4, zorder=0)
-    ax_gt.add_artist(earth_circle)
+    ax_gt.add_patch(earth_circle)
     # Líneas de latitud (paralelos)
     for lat in range(-90, 91, 30):
         y = np.sin(np.radians(lat))
@@ -207,9 +218,8 @@ def CambiarOrientacion():
     RegistrarEvento("Comando:", "cambiar orientacion del sensor")
 
 def CambiarModoControl():
-    mensaje = "Cambio\n"  # incluir \n para que Arduino lo reciba completo
+    mensaje = "Cambio"
     mySerial.write(mensaje.encode('utf-8'))
-    RegistrarEvento("Comando:", "activar control por joystick")
 
 def EscribirObservacion():
     global accion_actual
@@ -524,37 +534,42 @@ def actualizar_groundtrack_plot():
 
 window = Tk()
 window.geometry("1800x800")
-window.rowconfigure(tuple(range(13)), weight=1)
 window.columnconfigure((0,1,2,3), weight=1)
+window.columnconfigure(0, weight=1) # botones
+window.columnconfigure(1, weight=3) # grafica temp
+window.title("Interfície Gràfica Sensor Arduino") #titulo de la pestaña
+window.columnconfigure(2, weight=3) # radar
+window.columnconfigure(3, weight=4) # groundtrack
 
-IniciarButton = Button(window, text="Iniciar gráfica temp", bg='green', fg="black", command=Iniciarclick)
+
+IniciarButton = ttk.Button(window, text="Iniciar gráfica temp",  command=Iniciarclick)
 IniciarButton.grid(row=0, column=0, padx=5, pady=5, sticky=N + S + E + W)
 
-PararButton = Button(window, text="Detener envío datos", bg='red', fg="black", command=Parar)
+PararButton = ttk.Button(window, text="Detener envío datos", command=Parar)
 PararButton.grid(row=1, column=0, padx=5, pady=5, sticky=N + S + E + W)
 
-ReanudarButton = Button(window, text="Reanudar envío datos", bg='blue', fg="white", command=Reanudar)
+ReanudarButton = ttk.Button(window, text="Reanudar envío datos", command=Reanudar)
 ReanudarButton.grid(row=2, column=0, padx=5, pady=5, sticky=N + S + E + W)
 
-CambiarPeriodoButton = Button(window, text="Cambiar periodo transmision", bg='orange', fg="black", command=CambiarPeriodo)
+CambiarPeriodoButton = ttk.Button(window, text="Cambiar periodo transmision", command=CambiarPeriodo)
 CambiarPeriodoButton.grid(row=3, column=0, padx=5, pady=5, sticky=N+S+E+W)
 
-CambiarValorMaxTempButton = Button(window, text="Cambiar valor máximo temperatura", bg='purple', fg="white", command=CambiarValorMaxTemp)
+CambiarValorMaxTempButton = ttk.Button(window, text="Cambiar valor máximo temperatura", command=CambiarValorMaxTemp)
 CambiarValorMaxTempButton.grid(row=4, column=0, padx=5, pady=5, sticky=N+S+E+W)
 
-CambiarOrientacionButton = Button(window, text="Cambiar orientacion sensor", bg='yellow', fg="black", command=CambiarOrientacion)
+CambiarOrientacionButton = ttk.Button(window, text="Cambiar orientacion sensor",  command=CambiarOrientacion)
 CambiarOrientacionButton.grid(row=5, column=0, padx=5, pady=5, sticky=N+S+E+W)
 
-CambiarModoControlButton = Button(window, text="Cambiar modo control sensor", bg='pink', fg='black', command=CambiarModoControl)
+CambiarModoControlButton = ttk.Button(window, text="Cambiar modo control sensor",  command=CambiarModoControl)
 CambiarModoControlButton.grid(row=6, column=0, padx=5, pady=5, sticky=N+S+E+W)
 
-EscribirObservacionButton = Button(window, text="Enviar observacion", bg='black', fg='white', command=EscribirObservacion)
+EscribirObservacionButton = ttk.Button(window, text="Enviar observacion", command=EscribirObservacion)
 EscribirObservacionButton.grid(row=7, column=0, padx=5, pady=5, sticky=N+S+E+W)
 
-MostrarRegistroButton = Button(window, text="Mostrar registro de eventos",bg='lightgray', fg='black', command=MostrarRegistro)
+MostrarRegistroButton = ttk.Button(window, text="Mostrar registro de eventos", command=MostrarRegistro)
 MostrarRegistroButton.grid(row=8, column=0, padx=5, pady=5, sticky=N+S+E+W)
 
-MediaArduinoPythonButton = Button(window, text="Media Arduino/Python",bg='lightblue', fg='black', command=CambiarMedia)
+MediaArduinoPythonButton = ttk.Button(window, text="Media Arduino/Python", command=CambiarMedia)
 MediaArduinoPythonButton.grid(row=9, column=0, padx=5, pady=5, sticky=N+S+E+W)
 
 #MENSAJE PARA EL USUARIO
