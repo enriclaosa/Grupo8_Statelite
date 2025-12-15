@@ -460,8 +460,8 @@ def leer_datos_serial():
 def update_plot():
     # PLOTS TEMPERATURA (la lectura serial se hace en actualizar_radar_serial)
     ax.clear()
-    ax.set_xlim(0, max(100, i))
-    ax.set_ylim(15, 25)
+    ax.set_xlim(0, max(50, i))
+    ax.set_ylim(20, 25)
     if len(eje_x) > 0 and len(temperaturas) > 0:
         ax.plot(eje_x, temperaturas, label='Temperatura', linewidth=2)
     if len(eje_x) > 0 and len(medias) > 0:
@@ -536,8 +536,10 @@ def actualizar_groundtrack_plot():
 # INTERFICIE
 
 window = Tk()
-window.geometry("1800x800")
-window.columnconfigure((0,1,2,3), weight=1)
+window.geometry("2000x800")
+#window.columnconfigure((0,1,2,3), weight=1)
+window.rowconfigure(tuple(range(13)), weight=3)
+
 window.columnconfigure(0, weight=1) # botones
 window.columnconfigure(1, weight=3) # grafica temp
 window.title("Interfície Gràfica Sensor Arduino") #titulo de la pestaña
@@ -616,4 +618,3 @@ actualizar_radar_plot()
 actualizar_groundtrack_plot()
 
 window.mainloop()
-
