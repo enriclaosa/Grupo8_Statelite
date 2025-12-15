@@ -324,10 +324,11 @@ def MostrarRegistro():
     entry_data = DateEntry(filtros_frame)
     entry_data.grid(row=0, column=1, padx=5)
 
-    ttk.Label(filtros_frame, text="tipo de evento:").grid(row=0, column=2, padx=5)
+    ttk.Label(filtros_frame, text="Tipo de evento:").grid(row=0, column=2, padx=5)
     tipo_var = StringVar()
     tipo_var.set("Cualquiera")
-    menu_tipo = ttk.OptionMenu(filtros_frame, tipo_var, "Cualquiera", "Comando", "Alarma", "Observacion")
+    menu_tipo = ttk.OptionMenu(filtros_frame, tipo_var, "Cualquiera",
+                               "Cualquiera", "Comando", "Alarma", "Observacion")
     menu_tipo.grid(row=0, column=3, padx=5)
 
     aplicar_btn = ttk.Button(filtros_frame, text="Aplicar filtros", command=aplicar_filtros)
