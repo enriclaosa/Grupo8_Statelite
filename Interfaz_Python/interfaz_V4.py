@@ -218,9 +218,8 @@ def CambiarOrientacion():
     RegistrarEvento("Comando:", "cambiar orientacion del sensor")
 
 def CambiarModoControl():
-    mensaje = "Cambio\n"  # incluir \n para que Arduino lo reciba completo
+    mensaje = "Cambio"
     mySerial.write(mensaje.encode('utf-8'))
-    RegistrarEvento("Comando:", "activar control por joystick")
 
 def EscribirObservacion():
     global accion_actual
@@ -269,7 +268,7 @@ def RegistrarEvento(tipo, mensaje):
 
 def MostrarRegistro():
     def aplicar_filtros():
-        fecha_filtro = entry_data.get().strip()
+        fecha_filtro = entry_data.get_date().strftime("%d-%m-%Y")
         tipo_filtro = tipo_var.get()
         resultado = []
         try:
@@ -304,20 +303,22 @@ def MostrarRegistro():
     RegistroWindow = Toplevel(window)
     RegistroWindow.title("Registro filtrado")
 
-    filtros_frame = Frame(RegistroWindow)
+    filtros_frame = ttk.Frame(RegistroWindow)
     filtros_frame.pack(pady=5, padx=5, fill="x")
 
-    Label(filtros_frame, text="Fecha (dd-mm-yyyy):").grid(row=0, column=0, padx=5)
-    entry_data = Entry(filtros_frame)
+    ttk.Label(filtros_frame, text="Fecha (dd-mm-yyyy):").grid(row=0, column=0, padx=5)
+    entry_data = DateEntry(filtros_frame)
     entry_data.grid(row=0, column=1, padx=5)
 
-    Label(filtros_frame, text="tipo de evento:").grid(row=0, column=2, padx=5)
+    ttk.Label(filtros_frame, text="tipo de evento:").grid(row=0, column=2, padx=5)
     tipo_var = StringVar()
     tipo_var.set("Cualquiera")
-    menu_tipo = OptionMenu(filtros_frame, tipo_var, "Cualquiera", "Comando", "Alarma", "Observacion")
+    menu_tipo = ttk.OptionMenu(filtros_frame, tipo_var, "Cualquiera", "Comando", "Alarma", "Observacion")
     menu_tipo.grid(row=0, column=3, padx=5)
 
-    Button(filtros_frame, text="Aplicar filtros", command=aplicar_filtros).grid(row=0, column=4, padx=5)
+    aplicar_btn=ttk.Button(filtros_frame, text="Aplicar filtros", command=aplicar_filtros).grid(row=0, column=4, padx=5)
+    aplicar_btn.grid(row=0, column=4, padx=5)
+    
 
     text_area = ScrolledText(RegistroWindow, width=100, height=30)
     text_area.pack(expand=True, fill="both")
@@ -614,4 +615,3 @@ actualizar_radar_plot()
 actualizar_groundtrack_plot()
 
 window.mainloop()
-
