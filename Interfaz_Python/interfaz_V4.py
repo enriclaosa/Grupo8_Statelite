@@ -218,8 +218,9 @@ def CambiarOrientacion():
     RegistrarEvento("Comando:", "cambiar orientacion del sensor")
 
 def CambiarModoControl():
-    mensaje = "Cambio"
+    mensaje = "Cambio\n"  # incluir \n para que Arduino lo reciba completo
     mySerial.write(mensaje.encode('utf-8'))
+    RegistrarEvento("Comando:", "activar control por joystick")
 
 def EscribirObservacion():
     global accion_actual
@@ -615,3 +616,4 @@ actualizar_radar_plot()
 actualizar_groundtrack_plot()
 
 window.mainloop()
+
