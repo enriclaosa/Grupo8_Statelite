@@ -2,8 +2,8 @@
 
 SoftwareSerial mySerial(10, 11); // RX, TX (azul, naranja)
 
-const int led_rec = 8;                // LED rojo: indica recepción de datos
-const int led_fallo_datostemp = 6;   // LED azul: indica fallo en datos de temperatura
+const int led_rec = 2;                // LED rojo: indica recepción de datos
+const int led_fallo_datostemp = 3;   // LED azul: indica fallo en datos de temperatura
 const int led_timeout = 4;          // LED amarillo: indica timeout (5s sin datos)
 const int buzzer = 7;          
 
