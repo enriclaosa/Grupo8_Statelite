@@ -294,9 +294,11 @@ def MostrarRegistro():
             # partes[1] es la hora (HH:MM)
             tipo_linea = partes[2]  # debería ser "Comando:", "Alarma:", "Observacion:", etc.
 
-            # Filtro por fecha (solo día/mes/año)
-            if fecha_filtro and fecha_linea != fecha_filtro:
-                continue
+            # Filtro por fecha (solo día/mes/año). Si hay fecha seleccionada,
+            # comparamos solo contra la parte de fecha de la línea.
+            if fecha_filtro:
+                if fecha_linea != fecha_filtro:
+                    continue
 
             # Filtro por tipo
             if tipo_filtro != "Cualquiera":
