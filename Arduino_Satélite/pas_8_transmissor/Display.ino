@@ -194,20 +194,7 @@ if (controlJoystick) {
     else if (mensaje == "MEDIA_OFF") {
         activarMediaEnArduino = false;
     }
-    if(activarMediaEnArduino){
-      ultimasTemperaturas[indiceTemp] = temperatura;
-      indiceTemp = (indiceTemp + 1) % MAX_MEDIAS;
-      if (contadorTemp < MAX_MEDIAS) contadorTemp++;
-
-      float suma = 0;
-      for (int i = 0; i < contadorTemp; i++) {
-          suma += ultimasTemperaturas[i];
-      }
-      mediaTemperaturas = suma / contadorTemp;
-     // mySerial.print("Temperatura: "); Serial.print(temperatura);
-    //  mySerial.print(" °C, Media últimas "); Serial.print(contadorTemp);
-    //  mySerial.print(": "); Serial.println(mediaTemperaturas);
-      }
+   
 
   
     if(mensaje == "Parar")
@@ -231,8 +218,21 @@ if (controlJoystick) {
         mySerial.println(ConChecksum(linea1));
         String linea2 = "2 " + String(angulo) + " " + String(distancia) + " ";
         mySerial.println(ConChecksum(linea2));
-        String linea3= "3 " + String(mediaTemperaturas)+  " "; 
 
+        if (activarMediaEnArduino) {
+          ultimasTemperaturas[indiceTemp] = t;
+          indiceTemp = (indiceTemp + 1) % MAX_MEDIAS;
+        if (contadorTemp < MAX_MEDIAS) contadorTemp++;
+        float suma = 0;
+        for (int i = 0; i < contadorTemp; i++) {
+        suma += ultimasTemperaturas[i];
+        }
+        mediaTemperaturas = suma / contadorTemp;
+        String lineaMedia = "5 " + String(mediaTemperaturas) + " ";
+        mySerial.println(ConChecksum(lineaMedia));
+        }
+
+          
         nextLedRojo = millis() + intervalLedRojo;
         }
         nextHT = millis() + intervalHT;
