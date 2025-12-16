@@ -9,16 +9,6 @@ from tkinter.scrolledtext import ScrolledText
 import matplotlib
 import cartopy.crs as ccrs
 import cartopy.feature as cfeature
-from tkinter import ttk
-from tkcalendar import DateEntry
-
-# ç estilo global botones
-style = ttk.Style()
-style.theme_use('clam')  
-style.configure('TButton',
-                font=('Segoe UI', 10),
-                padding=6,
-                relief='flat')  # sin borde 3D
 
 
 # CONFIGURACIÓ SERIAL
@@ -213,7 +203,7 @@ def CambiarValorMaxTemp():
 def CambiarOrientacion():
     global accion_actual
     accion_actual = "orientacion"
-    MensajeVar.set("Escribe la nueva orientacion del sensor (grados):")
+    MensajeVar.set("Escribe la nueva orientacion del sensor (grados) (escribir -1 para volver a modo automatico:")
     ValorEntry.delete(0, END)
     RegistrarEvento("Comando:", "cambiar orientacion del sensor")
 
@@ -269,68 +259,59 @@ def RegistrarEvento(tipo, mensaje):
 
 def MostrarRegistro():
     def aplicar_filtros():
-        fecha_filtro = entry_data.get_date().strftime("%d-%m-%Y")
+        fecha_filtro = entry_data.get().strip()
         tipo_filtro = tipo_var.get()
         resultado = []
-
         try:
             with open("registro_eventos.txt", "r", encoding="utf-8") as f:
                 lineas = f.readlines()
         except FileNotFoundError:
-            text_area.config(state="normal")
             text_area.insert("1.0", "El fichero no existe.")
-            text_area.config(state="disabled")
             return
 
         for linea in lineas:
-            if fecha_filtro and not linea.startswith(fecha_filtro):
-                continue
+            # Filtro por fecha
+            if fecha_filtro:
+                if not linea.startswith(fecha_filtro):
+                    continue
 
+            # Filtro per tipo
             if tipo_filtro != "Cualquiera":
-                if f" {tipo_filtro} " not in linea:
+                if f"{tipo_filtro}:" not in linea:
                     continue
 
             resultado.append(linea)
 
+        # Mostrar resultado
         text_area.config(state="normal")
         text_area.delete("1.0", END)
-        text_area.insert("1.0", "".join(resultado) if resultado else "No hay resultados.")
+        if resultado:
+            text_area.insert("1.0", "".join(resultado))
+        else:
+            text_area.insert("1.0", "No hay resultados.")
         text_area.config(state="disabled")
 
     RegistroWindow = Toplevel(window)
     RegistroWindow.title("Registro filtrado")
 
-    filtros_frame = ttk.Frame(RegistroWindow)
+    filtros_frame = Frame(RegistroWindow)
     filtros_frame.pack(pady=5, padx=5, fill="x")
 
-    ttk.Label(filtros_frame, text="Fecha:").grid(row=0, column=0, padx=5)
-
+    Label(filtros_frame, text="Fecha (dd-mm-yyyy):").grid(row=0, column=0, padx=5)
     entry_data = DateEntry(filtros_frame)
     entry_data.grid(row=0, column=1, padx=5)
 
-    ttk.Label(filtros_frame, text="Tipo de evento:").grid(row=0, column=2, padx=5)
-
-    tipo_var = StringVar(value="Cualquiera")
-    menu_tipo = ttk.OptionMenu(
-        filtros_frame,
-        tipo_var,
-        "Cualquiera",
-        "Comando",
-        "Alarma",
-        "Observacion"
-    )
+    Label(filtros_frame, text="tipo de evento:").grid(row=0, column=2, padx=5)
+    tipo_var = StringVar()
+    tipo_var.set("Cualquiera")
+    menu_tipo = OptionMenu(filtros_frame, tipo_var, "Cualquiera", "Comando", "Alarma", "Observacion")
     menu_tipo.grid(row=0, column=3, padx=5)
 
-    aplicar_btn = ttk.Button(
-        filtros_frame,
-        text="Aplicar filtros",
-        command=aplicar_filtros
-    )
-    aplicar_btn.grid(row=0, column=4, padx=5)
+    Button(filtros_frame, text="Aplicar filtros", command=aplicar_filtros).grid(row=0, column=4, padx=5)
 
     text_area = ScrolledText(RegistroWindow, width=100, height=30)
     text_area.pack(expand=True, fill="both")
-    text_area.config(state="disabled")
+    text_area.config(state="disabled") 
 
 
 # Función única para leer datos del puerto serial
