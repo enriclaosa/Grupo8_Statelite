@@ -9,6 +9,9 @@ from tkinter.scrolledtext import ScrolledText
 import matplotlib
 import cartopy.crs as ccrs
 import cartopy.feature as cfeature
+from tkinter import ttk
+from tkcalendar import DateEntry
+
 
 
 # CONFIGURACIÓ SERIAL
@@ -254,12 +257,32 @@ def EnviarValor():
     ValorEntry.delete(0, END)
 
 def RegistrarEvento(tipo, mensaje):
+    fecha_hora_actual = datetime.datetime.now().strftime("%d-%m-%Y %H:%M")
     with open("registro_eventos.txt", "a", encoding="utf-8") as f:
         f.write("{} {} {}\n".format(fecha_hora_actual, tipo, mensaje))
 
 def MostrarRegistro():
+    RegistroWindow = Toplevel(window)
+    RegistroWindow.title("Registro filtrado")
+
+    filtros_frame = ttk.Frame(RegistroWindow)
+    filtros_frame.pack(pady=5, padx=5, fill="x")
+
+    ttk.Label(filtros_frame, text="Fecha (dd-mm-yyyy):").grid(row=0, column=0, padx=5)
+    entry_data = DateEntry(filtros_frame)
+    entry_data.grid(row=0, column=1, padx=5)
+
+    ttk.Label(filtros_frame, text="tipo de evento:").grid(row=0, column=2, padx=5)
+    tipo_var = StringVar()
+    tipo_var.set("Cualquiera")
+    menu_tipo = ttk.OptionMenu(filtros_frame, tipo_var, "Cualquiera", "Comando", "Alarma", "Observacion")
+    menu_tipo.grid(row=0, column=3, padx=5)
+
+    text_area = ScrolledText(RegistroWindow, width=100, height=30)
+    text_area.pack(expand=True, fill="both")
+    text_area.config(state="disabled") 
     def aplicar_filtros():
-        fecha_filtro = entry_data.get().strip()
+        fecha_filtro = entry_data.get_date().strftime("%d-%m-%Y")
         tipo_filtro = tipo_var.get()
         resultado = []
         try:
@@ -291,27 +314,11 @@ def MostrarRegistro():
             text_area.insert("1.0", "No hay resultados.")
         text_area.config(state="disabled")
 
-    RegistroWindow = Toplevel(window)
-    RegistroWindow.title("Registro filtrado")
-
-    filtros_frame = Frame(RegistroWindow)
-    filtros_frame.pack(pady=5, padx=5, fill="x")
-
-    Label(filtros_frame, text="Fecha (dd-mm-yyyy):").grid(row=0, column=0, padx=5)
-    entry_data = DateEntry(filtros_frame)
-    entry_data.grid(row=0, column=1, padx=5)
-
-    Label(filtros_frame, text="tipo de evento:").grid(row=0, column=2, padx=5)
-    tipo_var = StringVar()
-    tipo_var.set("Cualquiera")
-    menu_tipo = OptionMenu(filtros_frame, tipo_var, "Cualquiera", "Comando", "Alarma", "Observacion")
-    menu_tipo.grid(row=0, column=3, padx=5)
-
-    Button(filtros_frame, text="Aplicar filtros", command=aplicar_filtros).grid(row=0, column=4, padx=5)
-
-    text_area = ScrolledText(RegistroWindow, width=100, height=30)
-    text_area.pack(expand=True, fill="both")
-    text_area.config(state="disabled") 
+    aplicar_btn = ttk.Button(
+    filtros_frame,
+    text="Aplicar filtros",
+    command=aplicar_filtros) 
+    aplicar_btn.grid(row=0, column=4, padx=5)
 
 
 # Función única para leer datos del puerto serial
@@ -333,6 +340,7 @@ def leer_datos_serial():
                 continue
 
             # TEMPERATURA (código 1)
+            
             if codigo == 1 and len(temp) >= 3:
                 try:
                     humedad = float(temp[1])
@@ -344,23 +352,18 @@ def leer_datos_serial():
                         ultimos_10 = temperaturas[-10:]
                         media = sum(ultimos_10)/len(ultimos_10) if len(ultimos_10) > 0 else temperatura
                         medias.append(media)
-                    else:
-                        # Si la media viene del Arduino, debería estar en temp[3]
-                        if len(temp) >= 4:
-                            media = float(temp[3])
-                            medias.append(media)
-                        else:
-                            # Si no viene, calcularla aquí
-                            ultimos_10 = temperaturas[-10:]
-                            media = sum(ultimos_10)/len(ultimos_10) if len(ultimos_10) > 0 else temperatura
-                            medias.append(media)
+            
                     
                     if len(medias) >= 3 and medias[-1] > limite_alarma and medias[-2] > limite_alarma and medias[-3] > limite_alarma:
-                        RegistrarEvento("Alarma:", "tres medias de temperatura consecutivas por encima del limite!")
+                        RegistrarEvento("Alarma:", "tres medias de temperatura consecutivas por encima del limite!") 
                 except (ValueError, IndexError) as e:
                     print(f"Error procesando temperatura: {e}, línea: {linea}")
                     continue
-
+        
+            elif codigo == 5 and len(temp) >= 2:
+                media = float(temp[1])
+                medias.append(media)
+            
             # RADAR (código 2)
             elif codigo == 2 and len(temp) >= 3:
                 try:
@@ -524,6 +527,16 @@ def actualizar_groundtrack_plot():
 # INTERFICIE
 
 window = Tk()
+
+# ç estilo global botones
+style = ttk.Style()
+style.theme_use('clam')  
+style.configure('TButton',
+                font=('Segoe UI', 10),
+                padding=6,
+                relief='flat')  # sin borde 3D
+
+
 window.geometry("2000x800")
 #window.columnconfigure((0,1,2,3), weight=1)
 window.rowconfigure(tuple(range(13)), weight=3)
