@@ -195,8 +195,13 @@ if (controlJoystick) {
     else if (mensaje == "MEDIA_OFF") {
         activarMediaEnArduino = false;
     }
+  if(enviarDatos == true){
+    float h = dht.readHumidity();
+    float t = dht.readTemperature();
+    
+    //float alpha = 0.1; // factor de suavitzat (0.1=lent, 0.5=ràpid)
     if(activarMediaEnArduino){
-      ultimasTemperaturas[indiceTemp] = temperatura;
+      ultimasTemperaturas[indiceTemp] = t;
       indiceTemp = (indiceTemp + 1) % MAX_MEDIAS;
       if (contadorTemp < MAX_MEDIAS) contadorTemp++;
 
@@ -205,6 +210,7 @@ if (controlJoystick) {
           suma += ultimasTemperaturas[i];
       }
       mediaTemperaturas = suma / contadorTemp;
+       //mediaTemperaturas = alpha * t + (1 - alpha) * mediaTemperaturas;
      // mySerial.print("Temperatura: "); Serial.print(temperatura);
     //  mySerial.print(" °C, Media últimas "); Serial.print(contadorTemp);
     //  mySerial.print(": "); Serial.println(mediaTemperaturas);
@@ -215,9 +221,7 @@ if (controlJoystick) {
     enviarDatos = false;
     if(mensaje == "Reanudar")
     enviarDatos = true;
-    if(enviarDatos == true){
-    float h = dht.readHumidity();
-    float t = dht.readTemperature();
+    
     if (millis() >= nextHT){
         if (isnan(h) || isnan(t)){
         if (!esperandoTimeout){
