@@ -44,19 +44,14 @@ unsigned long nextMedidaDistancia = 0;
 int ultimaDistanciaEnviada = -2;
 
 const int segPins[7] = {2, 3, 4, 5, 6, 7, 8};
+// Medias tempratura
+#define MAX_MEDIAS 10
+float ultimasTemperaturas[MAX_MEDIAS]; // para las últimas 10 temperaturas
+int indiceTemp = 0;                    // para que vuelva a 1 cuando este a 10 
+int contadorTemp = 0;                   
+float mediaTemperaturas = 0;
 
-void mostrar8() {
-  for (int i = 0; i < 7; i++) {
-    digitalWrite(segPins[i], LOW);   // engegar tots els segments
-  }
-}
-
-void apagarDisplay() {
-  for (int i = 0; i < 7; i++) {
-    digitalWrite(segPins[i], HIGH);  // apagar tots els segments
-  }
-}
-
+bool activarMediaEnArduino = false;
 
 //cheksum 
 String ConChecksum(String mensaje) {
@@ -86,9 +81,13 @@ void setup() {
   pinMode(echoPin, INPUT);
 
   for (int i = 0; i < 7; i++) {
-  pinMode(segPins[i], OUTPUT);
-  digitalWrite(segPins[i], HIGH);  // ànode comú: HIGH = apagat
-}
+    pinMode(segPins[i], OUTPUT);
+  }
+
+  // Nombre 8 -> tots els segments ON
+  for (int i = 0; i < 7; i++) {
+    digitalWrite(segPins[i], LOW);   // ànode comú: LOW encén el segment
+  }
 }
 
 void loop() {  
@@ -153,7 +152,7 @@ if (controlJoystick) {
   // (si controlPython es true, ya se mueve con los comandos de Python)
    
   unsigned long ahora = millis();
-
+  
     // Medir distancia sin bloquear
     if (ahora >= nextMedidaDistancia) {
         nextMedidaDistancia = ahora + intervaloDistancia;
@@ -188,6 +187,29 @@ if (controlJoystick) {
             ultimaDistanciaEnviada = distancia;
          }
     }
+
+ if (mensaje == "MEDIA_ON") {
+        activarMediaEnArduino = true;
+    } 
+    else if (mensaje == "MEDIA_OFF") {
+        activarMediaEnArduino = false;
+    }
+    if(activarMediaEnArduino){
+      ultimasTemperaturas[indiceTemp] = temperatura;
+      indiceTemp = (indiceTemp + 1) % MAX_MEDIAS;
+      if (contadorTemp < MAX_MEDIAS) contadorTemp++;
+
+      float suma = 0;
+      for (int i = 0; i < contadorTemp; i++) {
+          suma += ultimasTemperaturas[i];
+      }
+      mediaTemperaturas = suma / contadorTemp;
+      mySerial.print("Temperatura: "); Serial.print(temperatura);
+      mySerial.print(" °C, Media últimas "); Serial.print(contadorTemp);
+      mySerial.print(": "); Serial.println(mediaTemperaturas);
+      }
+
+  
     if(mensaje == "Parar")
     enviarDatos = false;
     if(mensaje == "Reanudar")
@@ -204,8 +226,7 @@ if (controlJoystick) {
         }
         else {
         esperandoTimeout = false;
-        //digitalWrite(LedVerd, HIGH);
-        mostrar8();
+        digitalWrite(LedVerd, HIGH);
         String linea1 = "1 " + String(h) + " " + String(t) + " ";
         mySerial.println(ConChecksum(linea1));
         String linea2 = "2 " + String(angulo) + " " + String(distancia) + " ";
@@ -216,8 +237,7 @@ if (controlJoystick) {
         nextHT = millis() + intervalHT;
     }
     if (millis() >= nextLedRojo)
-        //digitalWrite(LedVerd, LOW);
-        mostrar8();
+        digitalWrite(LedVerd, LOW);
     if(esperandoTimeout && (millis() >= nextTimeoutHT)){
         mySerial.println("Fallo");
         esperandoTimeout = false;
