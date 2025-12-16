@@ -231,7 +231,7 @@ if (controlJoystick) {
         mySerial.println(ConChecksum(linea1));
         String linea2 = "2 " + String(angulo) + " " + String(distancia) + " ";
         mySerial.println(ConChecksum(linea2));
-        String linea3= "3 " + String(mediaTemperaturas)* " "; 
+        String linea3= "3 " + String(mediaTemperaturas)+  " "; 
 
         nextLedRojo = millis() + intervalLedRojo;
         }
