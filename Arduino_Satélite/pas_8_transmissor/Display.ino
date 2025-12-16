@@ -204,9 +204,9 @@ if (controlJoystick) {
           suma += ultimasTemperaturas[i];
       }
       mediaTemperaturas = suma / contadorTemp;
-      mySerial.print("Temperatura: "); Serial.print(temperatura);
-      mySerial.print(" °C, Media últimas "); Serial.print(contadorTemp);
-      mySerial.print(": "); Serial.println(mediaTemperaturas);
+     // mySerial.print("Temperatura: "); Serial.print(temperatura);
+    //  mySerial.print(" °C, Media últimas "); Serial.print(contadorTemp);
+    //  mySerial.print(": "); Serial.println(mediaTemperaturas);
       }
 
   
@@ -231,6 +231,7 @@ if (controlJoystick) {
         mySerial.println(ConChecksum(linea1));
         String linea2 = "2 " + String(angulo) + " " + String(distancia) + " ";
         mySerial.println(ConChecksum(linea2));
+        String linea3= "3 " + String(mediaTemperaturas)* " "; 
 
         nextLedRojo = millis() + intervalLedRojo;
         }
