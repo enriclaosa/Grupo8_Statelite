@@ -188,18 +188,15 @@ if (controlJoystick) {
             ultimaDistanciaEnviada = distancia;
          }
     }
-
+  if(enviarDatos == true){
+    float h = dht.readHumidity();
+    float t = dht.readTemperature();
  if (mensaje == "MEDIA_ON") {
         activarMediaEnArduino = true;
     } 
     else if (mensaje == "MEDIA_OFF") {
         activarMediaEnArduino = false;
     }
-  if(enviarDatos == true){
-    float h = dht.readHumidity();
-    float t = dht.readTemperature();
-    
-    //float alpha = 0.1; // factor de suavitzat (0.1=lent, 0.5=ràpid)
     if(activarMediaEnArduino){
       ultimasTemperaturas[indiceTemp] = t;
       indiceTemp = (indiceTemp + 1) % MAX_MEDIAS;
@@ -210,7 +207,6 @@ if (controlJoystick) {
           suma += ultimasTemperaturas[i];
       }
       mediaTemperaturas = suma / contadorTemp;
-       //mediaTemperaturas = alpha * t + (1 - alpha) * mediaTemperaturas;
      // mySerial.print("Temperatura: "); Serial.print(temperatura);
     //  mySerial.print(" °C, Media últimas "); Serial.print(contadorTemp);
     //  mySerial.print(": "); Serial.println(mediaTemperaturas);
