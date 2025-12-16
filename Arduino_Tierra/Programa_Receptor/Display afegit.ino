@@ -2,8 +2,8 @@
 
 SoftwareSerial mySerial(10, 11); // RX, TX (azul, naranja)
 
-const int led_rec = 8;                // LED rojo: indica recepción de datos
-const int led_fallo_datostemp = 6;   // LED azul: indica fallo en datos de temperatura
+const int led_rec = 2;                // LED rojo: indica recepción de datos
+const int led_fallo_datostemp = 3;   // LED azul: indica fallo en datos de temperatura
 const int led_timeout = 4;          // LED amarillo: indica timeout (5s sin datos)
 const int buzzer = 7;          
 
@@ -25,19 +25,6 @@ const unsigned long buzzer_duration = 1000; // 1 segundo de duración
 bool buzzer_active = false;                // Estado del buzzer
 
 const int segPins[7] = {2, 3, 4, 5, 6, 7, 8};
-
-void mostrar8() {
-  for (int i = 0; i < 7; i++) {
-    digitalWrite(segPins[i], LOW);   // engegar tots els segments
-  }
-}
-
-void apagarDisplay() {
-  for (int i = 0; i < 7; i++) {
-    digitalWrite(segPins[i], HIGH);  // apagar tots els segments
-  }
-}
-
 
 // Función para activar el buzzer por 1 segundo
 void activarBuzzer() {
@@ -61,14 +48,6 @@ bool comprobarChecksum(String ConChecksum, String &dataSinChecksum) {
   return calculado == recibido;
 }
 
-// Medias tempratura
-#define MAX_MEDIAS 10
-float ultimasTemperaturas[MAX_MEDIAS]; // para las últimas 10 temperaturas
-int indiceTemp = 0;                    // para que vuelva a 1 cuando este a 10 
-int contadorTemp = 0;                   
-float mediaTemperaturas = 0;
-
-bool activarMediaEnArduino = false;
 
 const double G = 6.67430e-11;  // Gravitational constant (m^3 kg^-1 s^-2)
 const double M = 5.97219e24;   // Mass of Earth (kg)
@@ -154,36 +133,14 @@ void loop() {
       humedad = humStr.toFloat();
       falloDHT = false;
 
-    //Media teperaturas!
-    if (mensaje == "MEDIA_ON") {
-        activarMediaEnArduino = true;
-    } 
-    else if (mensaje == "MEDIA_OFF") {
-        activarMediaEnArduino = false;
-    }
-    if(activarMediaEnArduino){
-      ultimasTemperaturas[indiceTemp] = temperatura;
-      indiceTemp = (indiceTemp + 1) % MAX_MEDIAS;
-      if (contadorTemp < MAX_MEDIAS) contadorTemp++;
+    
 
-      float suma = 0;
-      for (int i = 0; i < contadorTemp; i++) {
-          suma += ultimasTemperaturas[i];
-      }
-      mediaTemperaturas = suma / contadorTemp;
-      Serial.print("Temperatura: "); Serial.print(temperatura);
-      Serial.print(" °C, Media últimas "); Serial.print(contadorTemp);
-      Serial.print(": "); Serial.println(mediaTemperaturas);
-      }
-
-    //digitalWrite(led_rec, HIGH);
-    mostrar8();
+    digitalWrite(led_rec, HIGH);
     led_rec_on = true;
     led_rec_off_time = millis() + led_on_interval;
     digitalWrite(led_fallo_datostemp, LOW);
 
-      //digitalWrite(led_rec, HIGH);  // LED recepción datos on (igual que antes)
-      mostrar8();
+      digitalWrite(led_rec, HIGH);  // LED recepción datos on (igual que antes)
       led_rec_on = true;
       led_rec_off_time = millis() + led_on_interval;
       digitalWrite(led_fallo_datostemp, LOW);
@@ -221,8 +178,7 @@ void loop() {
       } else {
         digitalWrite(led_fallo_datostemp, LOW);
         // LED recepción datos ON y programar apagado
-        //digitalWrite(led_rec, HIGH);
-        mostrar8();
+        digitalWrite(led_rec, HIGH);
         led_rec_on = true;
         led_rec_off_time = millis() + led_on_interval;
       }
@@ -231,8 +187,7 @@ void loop() {
   
   // Apagar LED recepción después del intervalo
   if (led_rec_on && millis() >= led_rec_off_time && digitalRead(led_fallo_datostemp) == LOW) {
-    //digitalWrite(led_rec, LOW);
-    apagarDisplay()
+    digitalWrite(led_rec, LOW);
     led_rec_on = false;
   }
 
