@@ -188,8 +188,10 @@ if (controlJoystick) {
             ultimaDistanciaEnviada = distancia;
          }
     }
-
- if (mensaje == "MEDIA_ON") {
+  if(enviarDatos == true){
+    float h = dht.readHumidity();
+    float t = dht.readTemperature();
+   if (mensaje == "MEDIA_ON") {
         activarMediaEnArduino = true;
     } 
     else if (mensaje == "MEDIA_OFF") {
@@ -215,9 +217,6 @@ if (controlJoystick) {
     enviarDatos = false;
     if(mensaje == "Reanudar")
     enviarDatos = true;
-    if(enviarDatos == true){
-    float h = dht.readHumidity();
-    float t = dht.readTemperature();
     if (millis() >= nextHT){
         if (isnan(h) || isnan(t)){
         if (!esperandoTimeout){
