@@ -43,8 +43,6 @@ const unsigned long intervaloDistancia = 200; // 200ms entre medidas
 unsigned long nextMedidaDistancia = 0;
 int ultimaDistanciaEnviada = -2;
 
-const int segPins[7] = {2, 3, 4, 5, 6, 7, 8};
-
 //cheksum 
 String ConChecksum(String mensaje) {
   int checksum = 0;
@@ -71,15 +69,6 @@ void setup() {
   miServo.write(angulo);
   pinMode(trigPin, OUTPUT);
   pinMode(echoPin, INPUT);
-
-  for (int i = 0; i < 7; i++) {
-    pinMode(segPins[i], OUTPUT);
-  }
-
-  // Nombre 8 -> tots els segments ON
-  for (int i = 0; i < 7; i++) {
-    digitalWrite(segPins[i], LOW);   // ànode comú: LOW encén el segment
-  }
 }
 
 void loop() {  
@@ -213,4 +202,5 @@ if (controlJoystick) {
         }
     }  
 }
+
 
