@@ -52,3 +52,9 @@ Con el número de clasificación 1: obtenemos la temperatura, la humedad y la te
 Con el número de clasificación 2: se envia el ángulo al que esta apuntando el servo y la distancia que lee el sensor de ultrasonidos.
 
 Con el número de clasificación 4: se reciben las coordenadas x, y, z necesarias para dibujar la órbita del satélite.
+
+Botón de orientación del sensor: Se debe insertar un ángulo entre 0º y 180º, y luego pulsar enviar. Así el sensor de ultrasonidos se quedará mirando fijamente a esa orientación. Para volver a ponerlo en modo barrido se debe enviar -1.
+
+MODIFICACIONES VERSIÓN 4:
+
+
