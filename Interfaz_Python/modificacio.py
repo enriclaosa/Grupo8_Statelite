@@ -348,21 +348,30 @@ def leer_datos_serial():
                     temperaturas.append(temperatura)
                     eje_x.append(i)
                     i += 1
-                    if not media_en_arduino:
-                        ultimos_10 = temperaturas[-10:]
-                        media = sum(ultimos_10)/len(ultimos_10) if len(ultimos_10) > 0 else temperatura
-                        medias.append(media)
-            
-                    
-                    if len(medias) >= 3 and medias[-1] > limite_alarma and medias[-2] > limite_alarma and medias[-3] > limite_alarma:
-                        RegistrarEvento("Alarma:", "tres medias de temperatura consecutivas por encima del limite!") 
                 except (ValueError, IndexError) as e:
                     print(f"Error procesando temperatura: {e}, línea: {linea}")
                     continue
+            if not media_en_arduino:
+                    ultimos_10 = temperaturas[-10:]
+                    media = sum(ultimos_10)/len(ultimos_10) if len(ultimos_10) > 0 else temperatura
+                    medias.append(media)
+                    if len(medias) >= 3 and medias[-1] > limite_alarma and medias[-2] > limite_alarma and medias[-3] > limite_alarma:
+                        RegistrarEvento("Alarma:", "tres medias de temperatura consecutivas por encima del limite!") 
+                
         
-            elif codigo == 5 and len(temp) >= 2:
-                media = float(temp[1])
-                medias.append(media)
+            if media_en_arduino and codigo == 3 and len(temp) >= 2:
+                try:
+                    media = float(temp[1])
+                    if len(medias) > 0:
+                    # Filtrat exponencial: suavitza el salt entre valors consecutius
+                        alpha = 0.2
+                        media = alpha*media + (1-alpha)*medias[-1]
+                    medias.append(media)
+                    if len(medias) >= 3 and medias[-1] > limite_alarma and medias[-2] > limite_alarma and medias[-3] > limite_alarma:
+                        RegistrarEvento("Alarma:", "tres medias de temperatura consecutivas por encima del limite!") 
+                
+                except ValueError:
+                    continue
             
             # RADAR (código 2)
             elif codigo == 2 and len(temp) >= 3:
@@ -452,11 +461,12 @@ def update_plot():
     # PLOTS TEMPERATURA (la lectura serial se hace en actualizar_radar_serial)
     ax.clear()
     ax.set_xlim(0, max(50, i))
-    ax.set_ylim(20, 25)
+    ax.set_ylim(15, 25)
     if len(eje_x) > 0 and len(temperaturas) > 0:
         ax.plot(eje_x, temperaturas, label='Temperatura', linewidth=2)
     if len(eje_x) > 0 and len(medias) > 0:
-        ax.plot(eje_x[:len(medias)], medias, label='Media últimos 10', color='orange', linewidth=2)
+        min_len = min(len(eje_x), len(medias))
+        ax.plot(eje_x[:min_len], medias[:min_len], label='Media últimos 10', color='orange', linewidth=2)
     ax.set_title('Temperatura y media en tiempo real')
     ax.set_xlabel('Muestras')
     ax.set_ylabel('Temperatura (°C)')
