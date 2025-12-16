@@ -213,7 +213,7 @@ def CambiarValorMaxTemp():
 def CambiarOrientacion():
     global accion_actual
     accion_actual = "orientacion"
-    MensajeVar.set("Escribe la nueva orientacion del sensor (grados):")
+    MensajeVar.set("Escribe la nueva orientacion del sensor (grados) (escribir -1 para volver a modo automatico:")
     ValorEntry.delete(0, END)
     RegistrarEvento("Comando:", "cambiar orientacion del sensor")
 
@@ -618,3 +618,4 @@ actualizar_radar_plot()
 actualizar_groundtrack_plot()
 
 window.mainloop()
+
