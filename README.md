@@ -83,6 +83,7 @@ Nuevas funcionalidades:
 2. Mejora del radar: Hemos actualizado la vista del radar, el cual luce ahora mucho más profesional.
 3. Calendario en el registro de eventos: En el registro de eventos, donde anteriormente para filtrar por fecha los eventos se tenía que escribir manualment la fecha, hemos implementado un calendario donde se puede elegir dicha fecha.
 4. Control manual del servomotor con el sensor ultrasónico: Además de los dos modos ya establecidos anteriormente del servomotor (barrido automático y angulo determinado), hemos añadido un tercer modo de control, que se basa en el control manual del servomotor con un joystick. Para alternar entre este modo y los otros dos, utilizaremos el botón "Cambiar modo control sensor".
+5. Modo simulación: cuando se activa el modo simulación, el programa no lee datos de Arduino, sino que reproduce un archivo CSV con datos preestablecidos. Lee cada fila del archivo, identifica si es temperatura, media, radar o posición del satélite, y actualiza los gráficos exactamente igual que si vinieran de Arduino en tiempo real. Esto permite ver cómo habría respondido el satélite y sus sensores sin necesidad de conectarlos.
 
 
 Componentes que se perdieron durante la elaboración del proyecto:
