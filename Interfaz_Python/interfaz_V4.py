@@ -1,3 +1,4 @@
+
 import serial
 import matplotlib.pyplot as plt
 from tkinter import *
@@ -11,18 +12,11 @@ import cartopy.crs as ccrs
 import cartopy.feature as cfeature
 from tkinter import ttk
 from tkcalendar import DateEntry
-
-# ç estilo global botones
-style = ttk.Style()
-style.theme_use('clam')  
-style.configure('TButton',
-                font=('Segoe UI', 10),
-                padding=6,
-                relief='flat')  # sin borde 3D
-
+from tkinter.filedialog import askopenfilename
+import pandas as pd
 
 # CONFIGURACIÓ SERIAL
-device = 'COM5'  # Canvia pel teu port
+device = 'COM6'  # Canvia pel teu port
 mySerial = serial.Serial(device, 9600, timeout=2)
 
 # VARIABLES GLOBALS
@@ -34,6 +28,11 @@ running = False
 limite_alarma = 25.0
 accion_actual = None
 media_en_arduino = False
+simulacion_activa = False
+df_sim= None
+indice_sim= 0
+grabando_sesion = False
+archivo_sesion_temp = None
 
 radar_objects = []  # guarda (angle, distancia)
 sweep_angle = 0
@@ -175,6 +174,60 @@ else:
     ax_gt.legend(loc='upper right', fontsize=8, framealpha=0.9)
 
 # FUNCIONS PRINCIPALS
+
+def activar_simulacion():
+    global simulacion_activa
+    simulacion_activa = True
+    RegistrarEvento("Comando:", "Modo Simulación activado")
+    MensajeVar.set("Modo simulación activado. Selecciona día para reproducir.")
+    reproducir_sesion_interfaz()
+
+def reproducir_sesion_interfaz():
+    global df_sim, indice_sim
+    archivo = askopenfilename(title="Selecciona archivo de sesión", filetypes=[("CSV", "*.csv")])
+    if not archivo:
+        return
+    # Llegir dades del fitxer
+    df = pd.read_csv(archivo)
+    indice_sim = 0
+    # Preparar simulació
+    temperaturas.clear()
+    medias.clear()
+    eje_x.clear()
+    radar_objects.clear()
+    latitudes.clear()
+    longitudes.clear()
+    global i
+    i = 0
+    reproducir_linea()
+    #datos
+    def reproducir_linea(index=0):
+        global indice_sim, simulacion_activa
+        if not simulacion_activa:
+            return
+        if index >= len(df):
+            MensajeVar.set("Simulación finalizada.")
+            return
+        fila = df.iloc[index]
+        codigo = fila.get('codigo', '')
+        datos = fila.get('datos', '')
+
+        if codigo == "TEMP":
+            temp = float(datos)
+            temperaturas.append(temp)
+            eje_x.append(len(temperaturas))
+        elif codigo == "MEDIA":
+            medias.append(float(datos))
+        elif codigo == "OBS":
+            MensajeVar.set(f"Observación: {datos}")
+        
+        update_plot()
+        canvas_GT.draw()
+        indice_sim += 1
+        window.after(500, lambda: reproducir_linea)
+        
+
+
 def Iniciarclick():
     global running, temperaturas, eje_x, i
     if not running:
@@ -223,7 +276,7 @@ def CambiarModoControl():
     RegistrarEvento("Comando:", "activar control por joystick")
 
 def EscribirObservacion():
-    global accion_actual
+    global accion_actual, grabando_sesion, archivo_sesion_temp
     accion_actual = "observacion"
     MensajeVar.set("Escribe la observacion deseada:")
     ValorEntry.delete(0, END)
@@ -237,16 +290,37 @@ def CambiarMedia():
 
 def EnviarValor():
     valor = ValorEntry.get()
-    global limite_alarma
+    global limite_alarma, grabando_sesion, archivo_sesion_temp
+
+     # Detectar comandos de sesión
+    if valor.startswith("SESSIÓ ON"):
+        grabando_sesion = True
+        archivo_sesion_temp = f"sesion_{datetime.datetime.now().strftime('%Y%m%d_%H%M%S')}.csv"
+        with open(archivo_sesion_temp, "w", newline='') as f:
+            f.write("fecha_hora,codigo,datos\n")
+        RegistrarEvento("Observacion:", valor)
+    elif valor.startswith("SESSIÓ OFF") and grabando_sesion:
+        grabando_sesion = False
+        archivo_sesion_temp = None
+        RegistrarEvento("Observacion:", valor)
+    else:
+        RegistrarEvento("Observacion:", valor)
+    # Guardar dades si estem gravant
+    if grabando_sesion and archivo_sesion_temp:
+        fecha_hora = datetime.datetime.now().strftime("%d-%m-%Y %H:%M:%S")
+        with open(archivo_sesion_temp, "a", newline='') as f:
+            f.write(f"{fecha_hora},OBS,{valor}\n")
 
     if accion_actual == "periodo":
         mensaje = f"4 {valor}\n"
         mySerial.write(mensaje.encode('utf-8'))
     elif accion_actual == "orientacion":
         try:
+            valor = valor.strip()
             valor_int = int(valor)
             if valor_int == -1 or (0 <= valor_int <= 180):
                 mensaje = f"2 {valor_int}\n"
+                print(mensaje)
                 mySerial.write(mensaje.encode('utf-8'))
         except ValueError:
             MensajeVar.set("Introduce un número válido")
@@ -264,10 +338,30 @@ def EnviarValor():
     ValorEntry.delete(0, END)
 
 def RegistrarEvento(tipo, mensaje):
+    fecha_hora_actual = datetime.datetime.now().strftime("%d-%m-%Y %H:%M")
     with open("registro_eventos.txt", "a", encoding="utf-8") as f:
         f.write("{} {} {}\n".format(fecha_hora_actual, tipo, mensaje))
 
 def MostrarRegistro():
+    RegistroWindow = Toplevel(window)
+    RegistroWindow.title("Registro filtrado")
+
+    filtros_frame = ttk.Frame(RegistroWindow)
+    filtros_frame.pack(pady=5, padx=5, fill="x")
+
+    ttk.Label(filtros_frame, text="Fecha (dd-mm-yyyy):").grid(row=0, column=0, padx=5)
+    entry_data = DateEntry(filtros_frame)
+    entry_data.grid(row=0, column=1, padx=5)
+
+    ttk.Label(filtros_frame, text="tipo de evento:").grid(row=0, column=2, padx=5)
+    tipo_var = StringVar()
+    tipo_var.set("Cualquiera")
+    menu_tipo = ttk.OptionMenu(filtros_frame, tipo_var, "Cualquiera", "Comando", "Alarma", "Observacion")
+    menu_tipo.grid(row=0, column=3, padx=5)
+
+    text_area = ScrolledText(RegistroWindow, width=100, height=30)
+    text_area.pack(expand=True, fill="both")
+    text_area.config(state="disabled") 
     def aplicar_filtros():
         fecha_filtro = entry_data.get_date().strftime("%d-%m-%Y")
         tipo_filtro = tipo_var.get()
@@ -301,29 +395,11 @@ def MostrarRegistro():
             text_area.insert("1.0", "No hay resultados.")
         text_area.config(state="disabled")
 
-    RegistroWindow = Toplevel(window)
-    RegistroWindow.title("Registro filtrado")
-
-    filtros_frame = ttk.Frame(RegistroWindow)
-    filtros_frame.pack(pady=5, padx=5, fill="x")
-
-    ttk.Label(filtros_frame, text="Fecha (dd-mm-yyyy):").grid(row=0, column=0, padx=5)
-    entry_data = DateEntry(filtros_frame)
-    entry_data.grid(row=0, column=1, padx=5)
-
-    ttk.Label(filtros_frame, text="tipo de evento:").grid(row=0, column=2, padx=5)
-    tipo_var = StringVar()
-    tipo_var.set("Cualquiera")
-    menu_tipo = ttk.OptionMenu(filtros_frame, tipo_var, "Cualquiera", "Comando", "Alarma", "Observacion")
-    menu_tipo.grid(row=0, column=3, padx=5)
-
-    aplicar_btn=ttk.Button(filtros_frame, text="Aplicar filtros", command=aplicar_filtros).grid(row=0, column=4, padx=5)
+    aplicar_btn = ttk.Button(
+    filtros_frame,
+    text="Aplicar filtros",
+    command=aplicar_filtros) 
     aplicar_btn.grid(row=0, column=4, padx=5)
-    
-
-    text_area = ScrolledText(RegistroWindow, width=100, height=30)
-    text_area.pack(expand=True, fill="both")
-    text_area.config(state="disabled") 
 
 
 # Función única para leer datos del puerto serial
@@ -345,6 +421,7 @@ def leer_datos_serial():
                 continue
 
             # TEMPERATURA (código 1)
+            
             if codigo == 1 and len(temp) >= 3:
                 try:
                     humedad = float(temp[1])
@@ -352,27 +429,31 @@ def leer_datos_serial():
                     temperaturas.append(temperatura)
                     eje_x.append(i)
                     i += 1
-                    if not media_en_arduino:
-                        ultimos_10 = temperaturas[-10:]
-                        media = sum(ultimos_10)/len(ultimos_10) if len(ultimos_10) > 0 else temperatura
-                        medias.append(media)
-                    else:
-                        # Si la media viene del Arduino, debería estar en temp[3]
-                        if len(temp) >= 4:
-                            media = float(temp[3])
-                            medias.append(media)
-                        else:
-                            # Si no viene, calcularla aquí
-                            ultimos_10 = temperaturas[-10:]
-                            media = sum(ultimos_10)/len(ultimos_10) if len(ultimos_10) > 0 else temperatura
-                            medias.append(media)
-                    
-                    if len(medias) >= 3 and medias[-1] > limite_alarma and medias[-2] > limite_alarma and medias[-3] > limite_alarma:
-                        RegistrarEvento("Alarma:", "tres medias de temperatura consecutivas por encima del limite!")
                 except (ValueError, IndexError) as e:
                     print(f"Error procesando temperatura: {e}, línea: {linea}")
                     continue
-
+            if not media_en_arduino:
+                    ultimos_10 = temperaturas[-10:]
+                    media = sum(ultimos_10)/len(ultimos_10) if len(ultimos_10) > 0 else temperatura
+                    medias.append(media)
+                    if len(medias) >= 3 and medias[-1] > limite_alarma and medias[-2] > limite_alarma and medias[-3] > limite_alarma:
+                        RegistrarEvento("Alarma:", "tres medias de temperatura consecutivas por encima del limite!") 
+                
+        
+            if media_en_arduino and codigo == 3 and len(temp) >= 2:
+                try:
+                    media = float(temp[1])
+                    if len(medias) > 0:
+                    # Filtrat exponencial: suavitza el salt entre valors consecutius
+                        alpha = 0.2
+                        media = alpha*media + (1-alpha)*medias[-1]
+                    medias.append(media)
+                    if len(medias) >= 3 and medias[-1] > limite_alarma and medias[-2] > limite_alarma and medias[-3] > limite_alarma:
+                        RegistrarEvento("Alarma:", "tres medias de temperatura consecutivas por encima del limite!") 
+                
+                except ValueError:
+                    continue
+            
             # RADAR (código 2)
             elif codigo == 2 and len(temp) >= 3:
                 try:
@@ -460,16 +541,19 @@ def leer_datos_serial():
 def update_plot():
     # PLOTS TEMPERATURA (la lectura serial se hace en actualizar_radar_serial)
     ax.clear()
+    ax.set_facecolor('#f0f0f0')  # Cambiar fondo de la gráfica a un gris suave
     ax.set_xlim(0, max(50, i))
-    ax.set_ylim(20, 25)
+    ax.set_ylim(15, 25)
     if len(eje_x) > 0 and len(temperaturas) > 0:
-        ax.plot(eje_x, temperaturas, label='Temperatura', linewidth=2)
+        ax.plot(eje_x, temperaturas, label='Temperatura', linewidth=2,  color='dodgerblue')
     if len(eje_x) > 0 and len(medias) > 0:
-        ax.plot(eje_x[:len(medias)], medias, label='Media últimos 10', color='orange', linewidth=2)
-    ax.set_title('Temperatura y media en tiempo real')
-    ax.set_xlabel('Muestras')
-    ax.set_ylabel('Temperatura (°C)')
+        min_len = min(len(eje_x), len(medias))
+        ax.plot(eje_x[:min_len], medias[:min_len], label='Media últimos 10', color='orange', linewidth=2)
+    ax.set_title('Temperatura y media en tiempo real', fontsize=14, fontweight='bold')
+    ax.set_xlabel('Muestras', fontsize=10)
+    ax.set_ylabel('Temperatura (°C)', fontsize=10)
     ax.legend()
+    ax.grid(True, linestyle='--', color='gray', alpha=0.5)
     canvas.draw()
 
     if running:
@@ -536,9 +620,19 @@ def actualizar_groundtrack_plot():
 # INTERFICIE
 
 window = Tk()
+
+# ç estilo global botones
+style = ttk.Style()
+style.theme_use('clam')  
+style.configure('TButton',
+                font=('Segoe UI', 10),
+                padding=6,
+                relief='flat')  # sin borde 3D
+
+
 window.geometry("2000x800")
 #window.columnconfigure((0,1,2,3), weight=1)
-window.rowconfigure(tuple(range(13)), weight=3)
+window.rowconfigure(tuple(range(14)), weight=3)
 
 window.columnconfigure(0, weight=1) # botones
 window.columnconfigure(1, weight=3) # grafica temp
@@ -577,18 +671,21 @@ MostrarRegistroButton.grid(row=8, column=0, padx=5, pady=5, sticky=N+S+E+W)
 MediaArduinoPythonButton = ttk.Button(window, text="Media Arduino/Python", command=CambiarMedia)
 MediaArduinoPythonButton.grid(row=9, column=0, padx=5, pady=5, sticky=N+S+E+W)
 
+SimulacionButton = ttk.Button(window, text="Activar Simulación", command=activar_simulacion) 
+SimulacionButton.grid(row=10, column=0, padx=5, pady=5, sticky=N+S+E+W)
+
 #MENSAJE PARA EL USUARIO
 MensajeVar = StringVar()
 MensajeLabel = Label(window, textvariable=MensajeVar, anchor=W)
-MensajeLabel.grid(row=10, column=0, columnspan = 4, padx=5, pady=2, sticky=N+S+E+W)
+MensajeLabel.grid(row=11, column=0, columnspan = 4, padx=5, pady=2, sticky=N+S+E+W)
 
 # ENTRADA DE TEXTO
 ValorEntry = Entry(window)
-ValorEntry.grid(row=11, column=0, columnspan = 4, padx=5, pady=2, sticky=N+S+E+W)
+ValorEntry.grid(row=12, column=0, columnspan = 4, padx=5, pady=2, sticky=N+S+E+W)
 
 # BOTÓN ENVIAR
 EnviarButton = Button(window, text="Envia", bg="gray", command=EnviarValor)
-EnviarButton.grid(row=12, column=0, columnspan = 4, padx=5, pady=2, sticky=N+S+E+W)
+EnviarButton.grid(row=13, column=0, columnspan = 4, padx=5, pady=2, sticky=N+S+E+W)
 
 
 # GRAFICA TEMPERATURA
@@ -612,10 +709,11 @@ GTFrame.grid(row=0, column=3, rowspan=10, padx=5, pady=5, sticky=N+S+E+W)
 canvas_GT = FigureCanvasTkAgg(fig_gt, master=GTFrame)
 canvas_GT.get_tk_widget().pack(fill='both', expand=True)
 
+
+
 # INICIA ACTUALITZACIONS
 actualizar_radar_serial()
 actualizar_radar_plot()
 actualizar_groundtrack_plot()
 
 window.mainloop()
-
