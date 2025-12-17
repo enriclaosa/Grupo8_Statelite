@@ -28,7 +28,7 @@ Joystick:
 Nuestro satélite envia datos de temperatura y humedad, además de la posición y distancia de los objetos que detecta con el sensor de ultrasonidos y el ángulo en el que se encuentra apuntando el servo.
 
 
-En la placa de estacióin de tierra tenemos 3 leds y un buzzer.
+En la placa de estación de tierra tenemos 3 leds y un buzzer.
 
 Leds:
 1. El led rojo se enciende cada vez que se reciben datos del satélite.
@@ -36,7 +36,7 @@ Leds:
 3. El led azul cuando el sensor de temperatura y humedad ha tenido un fallo.
 
 Buzzer:
-1. Esta señal acústica de enciende cuando se detecta un fallo del sensor de ultrasonidos.
+1. Esta señal acústica de enciende durante un segundo cuando se detecta un fallo del sensor de ultrasonidos.
 
 El Arduino de estación de tierra a parte de procesar los datos que se envían desde el satélite, también simula la orbita que seguiría un satélite real, para mostrar unos groundtracks en la interfaz gráfica.
 El sistema satelital funciona con un kit de conexiones inalámbricas LoRa, así podemos separar la estación de tierra de nuestro satélite y todo funcionara con normalidad, ya que no depende de comunicación por cable.
@@ -51,15 +51,17 @@ Para procesar los datos, nuestro programa lee el primer número y luego cada val
 
 En la estación de tierra usamos la siguiente configuración:
 
-Con el número de clasificación 1: obtenemos la temperatura, la humedad y la temperatura media (últimas 10 temperaturas).
+Con el número de clasificación 1: obtenemos la humedad y la temperatura.
 
-Con el número de clasificación 2: se envia el ángulo al que esta apuntando el servo y la distancia que lee el sensor de ultrasonidos.
+Con el número de clasificación 2: obtenemos el ángulo al que esta apuntando el servo y la distancia que lee el sensor de ultrasonidos.
+
+Con el número de clasificación 3: si anteriormente se ha ordenado que la media de las últimas 10 temperaturas se calcule en el satélite, se recibe por este codigo, en caso contrario, la media se calcula directamente en la interfaz y no se recibe nada con este código.
 
 Con el número de clasificación 4: se reciben las coordenadas x, y, z necesarias para dibujar la órbita del satélite.
 
-En el satélite usamos esta otra nomenclatura:
+Para los datos que recibe el satélite usamos esta otra nomenclatura:
 
-Con el número de clasifiación 1: el intervalo de transisión de datos (en segundos).
+Con el número de clasifiación 1: el nuevo intervalo de transmisión de datos que ha elegido el usuario desde la interfaz (en segundos).
 
 Con el número de clasifiación 2: El ángulo que tomará el servo. En la estación de tierra se debe insertar un ángulo entre 0º y 180º, y luego pulsar enviar. Así el sensor de ultrasonidos se quedará mirando fijamente a esa orientación. Para volver a ponerlo en modo barrido se debe enviar -1.
 
