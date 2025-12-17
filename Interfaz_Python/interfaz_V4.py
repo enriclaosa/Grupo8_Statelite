@@ -1,4 +1,3 @@
-
 import serial
 import matplotlib.pyplot as plt
 from tkinter import *
@@ -52,7 +51,6 @@ latitudes = []  # Lista de latitudes
 longitudes = []  # Lista de longitudes
 tiempo_inicio_orbita = None  # Tiempo de inicio para calcular rotación
 CARTOPY_AVAILABLE = True
-
 
 fig_gt = plt.Figure(figsize=(8, 6))
 
@@ -174,7 +172,6 @@ else:
     ax_gt.legend(loc='upper right', fontsize=8, framealpha=0.9)
 
 # FUNCIONS PRINCIPALS
-
 def activar_simulacion():
     global simulacion_activa
     simulacion_activa = True
@@ -226,8 +223,6 @@ def reproducir_sesion_interfaz():
         indice_sim += 1
         window.after(500, lambda: reproducir_linea)
         
-
-
 def Iniciarclick():
     global running, temperaturas, eje_x, i
     if not running:
@@ -312,7 +307,7 @@ def EnviarValor():
             f.write(f"{fecha_hora},OBS,{valor}\n")
 
     if accion_actual == "periodo":
-        mensaje = f"4 {valor}\n"
+        mensaje = f"1 {valor}\n"
         mySerial.write(mensaje.encode('utf-8'))
     elif accion_actual == "orientacion":
         try:
@@ -401,7 +396,6 @@ def MostrarRegistro():
     command=aplicar_filtros) 
     aplicar_btn.grid(row=0, column=4, padx=5)
 
-
 # Función única para leer datos del puerto serial
 def leer_datos_serial():
     global i, radar_objects
@@ -421,7 +415,6 @@ def leer_datos_serial():
                 continue
 
             # TEMPERATURA (código 1)
-            
             if codigo == 1 and len(temp) >= 3:
                 try:
                     humedad = float(temp[1])
@@ -438,7 +431,18 @@ def leer_datos_serial():
                     medias.append(media)
                     if len(medias) >= 3 and medias[-1] > limite_alarma and medias[-2] > limite_alarma and medias[-3] > limite_alarma:
                         RegistrarEvento("Alarma:", "tres medias de temperatura consecutivas por encima del limite!") 
-                
+                        
+            # RADAR (código 2)
+            if codigo == 2 and len(temp) >= 3:
+                try:
+                    angulo = float(temp[1])
+                    distancia = float(temp[2])
+                    radar_objects.append((angulo, distancia))
+                    if len(radar_objects) > 50:
+                        radar_objects.pop(0)
+                except (ValueError, IndexError) as e:
+                    print(f"Error procesando radar: {e}, línea: {linea}")
+                    continue 
         
             if media_en_arduino and codigo == 3 and len(temp) >= 2:
                 try:
@@ -453,22 +457,10 @@ def leer_datos_serial():
                 
                 except ValueError:
                     continue
-            
-            # RADAR (código 2)
-            elif codigo == 2 and len(temp) >= 3:
-                try:
-                    angulo = float(temp[1])
-                    distancia = float(temp[2])
-                    radar_objects.append((angulo, distancia))
-                    if len(radar_objects) > 50:
-                        radar_objects.pop(0)
-                except (ValueError, IndexError) as e:
-                    print(f"Error procesando radar: {e}, línea: {linea}")
-                    continue
 
             # GROUNDTRACK (código 4)
             # Ahora el Arduino envía directamente latitud y longitud
-            elif codigo == 4 and len(temp) >= 3:
+            if codigo == 4 and len(temp) >= 3:
                 try:
                     # El Arduino ahora envía: código latitud longitud
                     lat = float(temp[1])
@@ -618,28 +610,21 @@ def actualizar_groundtrack_plot():
 
 
 # INTERFICIE
-
 window = Tk()
 
 # ç estilo global botones
 style = ttk.Style()
 style.theme_use('clam')  
-style.configure('TButton',
-                font=('Segoe UI', 10),
-                padding=6,
-                relief='flat')  # sin borde 3D
+style.configure('TButton', font=('Segoe UI', 10), padding=6, relief='flat')  # sin borde 3D
 
 
 window.geometry("2000x800")
-#window.columnconfigure((0,1,2,3), weight=1)
 window.rowconfigure(tuple(range(14)), weight=3)
-
 window.columnconfigure(0, weight=1) # botones
 window.columnconfigure(1, weight=3) # grafica temp
-window.title("Interfície Gràfica Sensor Arduino") #titulo de la pestaña
 window.columnconfigure(2, weight=3) # radar
 window.columnconfigure(3, weight=4) # groundtrack
-
+window.title("Interfície Gràfica Sensor Arduino") #titulo de la pestaña
 
 IniciarButton = ttk.Button(window, text="Iniciar gráfica temp",  command=Iniciarclick)
 IniciarButton.grid(row=0, column=0, padx=5, pady=5, sticky=N + S + E + W)
@@ -687,7 +672,6 @@ ValorEntry.grid(row=12, column=0, columnspan = 4, padx=5, pady=2, sticky=N+S+E+W
 EnviarButton = Button(window, text="Envia", bg="gray", command=EnviarValor)
 EnviarButton.grid(row=13, column=0, columnspan = 4, padx=5, pady=2, sticky=N+S+E+W)
 
-
 # GRAFICA TEMPERATURA
 GraficaFrame = Frame(window)
 GraficaFrame.grid(row=0, column=1, rowspan=10, padx=5, pady=5, sticky=N+S+E+W)
@@ -708,8 +692,6 @@ GTFrame = Frame(window)
 GTFrame.grid(row=0, column=3, rowspan=10, padx=5, pady=5, sticky=N+S+E+W)
 canvas_GT = FigureCanvasTkAgg(fig_gt, master=GTFrame)
 canvas_GT.get_tk_widget().pack(fill='both', expand=True)
-
-
 
 # INICIA ACTUALITZACIONS
 actualizar_radar_serial()
