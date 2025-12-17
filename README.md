@@ -50,6 +50,7 @@ Lo más relevante acerca de los códigos es el sistema que usamos para enviar da
 Para procesar los datos, nuestro programa lee el primer número y luego cada valor separado por un espacio es un dato distinto que se envia.
 
 En la estación de tierra usamos la siguiente configuración:
+
 Con el número de clasificación 1: obtenemos la temperatura, la humedad y la temperatura media (últimas 10 temperaturas).
 
 Con el número de clasificación 2: se envia el ángulo al que esta apuntando el servo y la distancia que lee el sensor de ultrasonidos.
@@ -57,6 +58,7 @@ Con el número de clasificación 2: se envia el ángulo al que esta apuntando el
 Con el número de clasificación 4: se reciben las coordenadas x, y, z necesarias para dibujar la órbita del satélite.
 
 En el satélite usamos esta otra nomenclatura:
+
 Con el número de clasifiación 1: el intervalo de transisión de datos (en segundos).
 
 Con el número de clasifiación 2: El ángulo que tomará el servo. En la estación de tierra se debe insertar un ángulo entre 0º y 180º, y luego pulsar enviar. Así el sensor de ultrasonidos se quedará mirando fijamente a esa orientación. Para volver a ponerlo en modo barrido se debe enviar -1.
