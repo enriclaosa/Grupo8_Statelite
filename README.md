@@ -1,5 +1,8 @@
 GRUPO 8
 
+<img width="1804" height="1138" alt="image" src="https://github.com/user-attachments/assets/c2a60d96-9b3a-43fb-9a42-56948999b480" />
+
+
 PROYECTO SISTEMA SATELITAL
 
 
