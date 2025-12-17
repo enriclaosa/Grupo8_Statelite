@@ -460,17 +460,19 @@ def leer_datos_serial():
 def update_plot():
     # PLOTS TEMPERATURA (la lectura serial se hace en actualizar_radar_serial)
     ax.clear()
+    ax.set_facecolor('#f0f0f0')  # Cambiar fondo de la gráfica a un gris suave
     ax.set_xlim(0, max(50, i))
     ax.set_ylim(15, 25)
     if len(eje_x) > 0 and len(temperaturas) > 0:
-        ax.plot(eje_x, temperaturas, label='Temperatura', linewidth=2)
+        ax.plot(eje_x, temperaturas, label='Temperatura', linewidth=2,  color='dodgerblue')
     if len(eje_x) > 0 and len(medias) > 0:
         min_len = min(len(eje_x), len(medias))
         ax.plot(eje_x[:min_len], medias[:min_len], label='Media últimos 10', color='orange', linewidth=2)
-    ax.set_title('Temperatura y media en tiempo real')
-    ax.set_xlabel('Muestras')
-    ax.set_ylabel('Temperatura (°C)')
+    ax.set_title('Temperatura y media en tiempo real', fontsize=14, fontweight='bold')
+    ax.set_xlabel('Muestras', fontsize=10)
+    ax.set_ylabel('Temperatura (°C)', fontsize=10)
     ax.legend()
+    ax.grid(True, linestyle='--', color='gray', alpha=0.5)
     canvas.draw()
 
     if running:
