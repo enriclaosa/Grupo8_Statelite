@@ -69,8 +69,16 @@ Con el número de clasifiación 1: el nuevo intervalo de transmisión de datos q
 Con el número de clasifiación 2: El ángulo que tomará el servo. En la estación de tierra se debe insertar un ángulo entre 0º y 180º, y luego pulsar enviar. Así el sensor de ultrasonidos se quedará mirando fijamente a esa orientación. Para volver a ponerlo en modo barrido se debe enviar -1.
 
 
+Instrucciones generales para la interfaz:
+Una vez se ejecuta el programa, solo están activados los groundtracks, para encender la gráfica de temperatura y el radar hay que pulsar el botón que las inicia. El registro de eventos tiene integrado un calendario para escoger el dia del archivo y un selector de tipo para filtrar por distintas alarmas y comandos. En la parte inferior de la gráfica hay una barra de texto, que mediante distintos botones se podrá enviar información al satélite.
+
+
 MODIFICACIONES VERSIÓN 4:
 
+Para la versión final del proyecto se nos dieron algunas ideas y la libertad de añadir lo que quisieramos al sistema satelital. A continuación detallaremos lo que hemos añadido. También hemos optimizado y estructurado mejor el código para que sea más fácil de entender y te puedas mover mejor por este. Por otro lado, hemos cambiado ligeramente la apariencia de la interfaz gráfica para que sea más amigable y limpia.
+
+
+Hemos mejorado la apariencia del radar y de los groundtracks en la interfaz grafica, haciendo que sean mucho más realistas. A demás hemos añadido un selector de tipo calendario para acceder al archivo de un dia específico de nuestro registro de eventos. Finalmente hemos añadido un joystick para poder controlar manualmente la orientación del radar del satélite, que se actúa con un botón en la interfaz gráfica.
 
 
 Componentes que se perdieron durante la elaboración del proyecto:
