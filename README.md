@@ -77,10 +77,14 @@ MODIFICACIONES VERSIÓN 4:
 
 Para la versión final del proyecto se nos dieron algunas ideas y la libertad de añadir lo que quisieramos al sistema satelital. A continuación detallaremos lo que hemos añadido. También hemos optimizado y estructurado mejor el código para que sea más fácil de entender y te puedas mover mejor por este. Por otro lado, hemos cambiado ligeramente la apariencia de la interfaz gráfica para que sea más amigable y limpia.
 
-
-Hemos mejorado la apariencia del radar y de los groundtracks en la interfaz grafica, haciendo que sean mucho más realistas. A demás hemos añadido un selector de tipo calendario para acceder al archivo de un dia específico de nuestro registro de eventos. Finalmente hemos añadido un joystick para poder controlar manualmente la orientación del radar del satélite, que se actúa con un botón en la interfaz gráfica.
+Nuevas funcionalidades:
+1. Modificación de la visualización de la órbita simulada: Anteriormente teníamos una esfera que simulaba la tierra y se dibujaba la órbita simulada alrededor de ella, lo cual hemos cambiado por unos groundtracks que muestran el mapamundi i se dibuja la trayectoria por donde pasa el satélite.
+2. Mejora del radar: Hemos actualizado la vista del radar, el cual luce ahora mucho más profesional.
+3. Calendario en el registro de eventos: En el registro de eventos, donde anteriormente para filtrar por fecha los eventos se tenía que escribir manualment la fecha, hemos implementado un calendario donde se puede elegir dicha fecha.
+4. Control manual del servomotor con el sensor ultrasónico: Además de los dos modos ya establecidos anteriormente del servomotor (barrido automático y angulo determinado), hemos añadido un tercer modo de control, que se basa en el control manual del servomotor con un joystick. Para alternar entre este modo y los otros dos, utilizaremos el botón "Cambiar modo control sensor".
 
 
 Componentes que se perdieron durante la elaboración del proyecto:
 
 <img width="592" height="262" alt="image" src="https://github.com/user-attachments/assets/7d6e8988-19da-43da-93f3-7aa8ebc89176" />
+R.I.P. 🙏
