@@ -69,3 +69,7 @@ Con el número de clasifiación 2: El ángulo que tomará el servo. En la estaci
 MODIFICACIONES VERSIÓN 4:
 
 
+
+Componentes que se perdieron durante la elaboración del proyecto:
+
+<img width="592" height="262" alt="image" src="https://github.com/user-attachments/assets/7d6e8988-19da-43da-93f3-7aa8ebc89176" />
